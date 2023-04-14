@@ -45,9 +45,9 @@ include_directories( include
         include/graphs
         include/combinatorics
         include/utils
-        include/CONTESTS/PACE21/*
-        include/CONTESTS/PACE21/*/*
-        include/CONTESTS/PACE21/*/*/*
+        include/clues/*
+        include/clues/*/*
+        include/clues/*/*/*
         )
 
 file(GLOB SOURCES
@@ -76,13 +76,13 @@ file(GLOB SOURCES
         src/utils/StandardUtils.cpp
         src/utils/TimeMeasurer.cpp
 
-        src/CONTESTS/PACE21/*.cpp
-        src/CONTESTS/PACE21/kernelization/*.cpp
-        src/CONTESTS/PACE21/heur/*.cpp
-        src/CONTESTS/PACE21/*/EOCreators/*.cpp
-        src/CONTESTS/PACE21/*/SwapCandidates/*.cpp
-        src/CONTESTS/PACE21/*/SwpCndCreators/*.cpp
-        src/CONTESTS/PACE21/*/StateImprovers/*.cpp
+        src/clues/*.cpp
+        src/clues/kernelization/*.cpp
+        src/clues/heur/*.cpp
+        src/clues/*/EOCreators/*.cpp
+        src/clues/*/SwapCandidates/*.cpp
+        src/clues/*/SwpCndCreators/*.cpp
+        src/clues/*/StateImprovers/*.cpp
 
         ) # include all source files
 
@@ -97,21 +97,21 @@ file(GLOB SOURCES
 ##        "src/graphs/GraphUtils.cpp"
 #        "src/graphs/unit_tests/test_GraphTrimmer.cpp"
 #        "src/graphs/GraphTrimmer.cpp"
-##        "src/CONTESTS/PACE21/kernelization/CEKernelizer.cpp"
-#        "src/CONTESTS/PACE21/unit_tests/test_CEKernelizer.cpp"
-##        "src/CONTESTS/PACE21/heur/EOCreators/ComponentExpansion.cpp"
-#        "src/CONTESTS/PACE21/unit_tests/test_ComponentExpansion.cpp"
-#        "src/CONTESTS/PACE21/unit_tests/test_State.cpp"
-#        "src/CONTESTS/PACE21/unit_tests/test_SwapCandidate.cpp"
-#        "src/CONTESTS/PACE21/unit_tests/test_SwpCndNode.cpp"
-#        "src/CONTESTS/PACE21/unit_tests/test_SwpCndEdge.cpp"
-#        "src/CONTESTS/PACE21/unit_tests/test_SwpCndTriangle.cpp"
-#        "src/CONTESTS/PACE21/unit_tests/test_ConvexHullTrickDynamic.cpp"
-#        "src/CONTESTS/PACE21/unit_tests/test_SwpCndEO.cpp"
-#        "src/CONTESTS/PACE21/unit_tests/test_ComponentExpansionRepulsion.cpp"
-#        "src/CONTESTS/PACE21/unit_tests/test_ComponentExpansionAttraction.cpp"
-#        "src/CONTESTS/PACE21/unit_tests/test_Solver.cpp"
-#        "src/CONTESTS/PACE21/unit_tests/test_NodeEdgeGreedy.cpp"
+##        "src/clues/kernelization/CEKernelizer.cpp"
+#        "src/clues/unit_tests/test_CEKernelizer.cpp"
+##        "src/clues/heur/EOCreators/ComponentExpansion.cpp"
+#        "src/clues/unit_tests/test_ComponentExpansion.cpp"
+#        "src/clues/unit_tests/test_State.cpp"
+#        "src/clues/unit_tests/test_SwapCandidate.cpp"
+#        "src/clues/unit_tests/test_SwpCndNode.cpp"
+#        "src/clues/unit_tests/test_SwpCndEdge.cpp"
+#        "src/clues/unit_tests/test_SwpCndTriangle.cpp"
+#        "src/clues/unit_tests/test_ConvexHullTrickDynamic.cpp"
+#        "src/clues/unit_tests/test_SwpCndEO.cpp"
+#        "src/clues/unit_tests/test_ComponentExpansionRepulsion.cpp"
+#        "src/clues/unit_tests/test_ComponentExpansionAttraction.cpp"
+#        "src/clues/unit_tests/test_Solver.cpp"
+#        "src/clues/unit_tests/test_NodeEdgeGreedy.cpp"
 #        )
 #
 #add_executable(Tests ${TESTS})
