@@ -39,6 +39,6 @@ Maximum run time can be set by changing variable _Global::max_runtime_in_seconds
 
 **Generating tests:**
 
-Code used to generate tests can be found on the _test_generator_ branch.
+Code used to generate tests can be found on the _test-generator_ branch.
 
 After bulding an executable file, just run it with <code> ./CluES </code> command.
