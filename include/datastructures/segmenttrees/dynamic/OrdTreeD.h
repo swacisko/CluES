@@ -1,8 +1,0 @@
-//
-// Created by sylwester on 1/9/21.
-//
-
-#ifndef ALGORITHMSPROJECT_ORDTREED_H
-#define ALGORITHMSPROJECT_ORDTREED_H
-
-#endif //ALGORITHMSPROJECT_ORDTREED_H

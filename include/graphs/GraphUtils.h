@@ -5,7 +5,7 @@
 #ifndef ALGORITHMSPROJECT_GRAPHUTILS_H
 #define ALGORITHMSPROJECT_GRAPHUTILS_H
 
-#include <combinatorics/sequences/Sorting.h>
+//#include <combinatorics/sequences/Sorting.h>
 #include "Makros.h"
 
 class GraphUtils {
@@ -21,7 +21,8 @@ public:
     static VI getComplimentaryNodes( VVI & V, VI & nodes );
 
     /**
-     * Colors are integers numbered from 0. There greatest value of a color will be at most D, where D is the greatest degree in V (that is pessimistically (D+1)-coloring of V).
+     * Colors are integers numbered from 0. There greatest value of a color will be at most D, where D is the greatest
+     * degree in V (that is pessimistically (D+1)-coloring of V).
      * @param V
      * @return random coloring of graph V. In the returned vector res, value res[i] is the color of vertex i in V.
      */
@@ -33,7 +34,7 @@ public:
      *
      * @return number of edges of graph V
      */
-    static int countEdges(VVI & V);
+    static int countEdges(VVI & V, const bool directed = false);
 
     template< class wtype>
     static int countEdges( vector< vector< pair<int,wtype> > >& V){
@@ -42,7 +43,13 @@ public:
         return res >> 1;
     }
 
-    static VPII getGraphEdges( VVI & V );
+    static VPII getGraphEdges( VVI & V, bool directed = false );
+    static VPII getDirectedGraphEdges( VVI & V );
+
+    /**
+     * Creates a graph for given set of edges.
+     */
+    static VVI getGraphForEdges(VPII edges, bool directed = false);
 
     /**
      * Finds all edges in a graph. If the graphs is undirected, then only one of two edges (a,b) and (b,a) will be
@@ -172,9 +179,7 @@ public:
 
     /**
      * Removes given set of edges from the graph
-     * @param V
-     * @param edges
-     * @param directed
+     * CAUTION! Vector [edges] is modified, if directed == false
      */
     static void removeEdges(VVI& V, VPII& edges, bool directed = false);
 
@@ -340,6 +345,26 @@ public:
     }
 
     static void writeBasicGraphStatistics(VVI& V);
+
+    /**
+     * Finds the regularity of graph V. If all nodes have the same degree, then that degree is returned, otherwise -1.
+     */
+    static int regularity(VVI V);
+
+    /**
+     * Checks whether given graph is simple.
+     */
+    static bool isSimple(VVI V);
+
+    /**
+    * Makes graph simple, by removing all self-loops and all parallel edges.
+    */
+    static VVI makeSimple(VVI V);
+
+    /**
+    * Creates a graph isomorphic to given graph [V], by remapiing nodes:   i --> perm[i]
+    */
+    static VVI remapGraph( VVI V, VI perm );
 
 };
 

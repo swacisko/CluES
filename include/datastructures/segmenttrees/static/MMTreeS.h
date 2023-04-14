@@ -1,8 +1,0 @@
-//
-// Created by sylwester on 1/9/21.
-//
-
-#ifndef ALGORITHMSPROJECT_MMTREES_H
-#define ALGORITHMSPROJECT_MMTREES_H
-
-#endif //ALGORITHMSPROJECT_MMTREES_H

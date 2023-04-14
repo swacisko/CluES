@@ -33,6 +33,7 @@ namespace GraphReader{
 
         int N,M;
         int edges_read = 0;
+        int cnt = 0;
 
         while( true ){
             getline(cin,s,char(10));
@@ -64,6 +65,14 @@ namespace GraphReader{
 
                 if( edges_read == M ) break;
             }
+
+            if(cnt++ > 1e9){
+                ENDL(5);
+                clog << "GraphReader endless loop, M = " << M <<", but only "
+                << edges_read << " edges were read" << endl;
+                ENDL(5);
+                break;
+            }
         }
 
         for( int i=0; i<N; i++ ){
@@ -71,6 +80,39 @@ namespace GraphReader{
             V[i].resize( unique(ALL(V[i])) - V[i].begin() );
         }
 
+        return V;
+    }
+
+    VVI readGraphDIMACSdirectedUnweighted(istream &cin, bool edgeFoolowE) {
+        string s;
+        VVI V;
+        int N,M, edges_read = 0;
+
+        while( true ){
+            getline(cin,s,char(10));
+
+            if( s[0] == 'c' ){
+                // nothing to do here, this is a comment
+            }else if( s[0] == 'p' ){
+                stringstream str(s);
+                string nothingBox;
+                str >> nothingBox >> nothingBox >> N >> M;
+                V = VVI(N);
+            }else{
+                stringstream str(s);
+                int a,b;
+                char e;
+
+                if(edgeFoolowE) str >> e >> a >> b;
+                else str >> a >> b;
+
+                edges_read++;a--;b--;
+                V[a].push_back(b);
+                if( edges_read == M ) break;
+            }
+        }
+
+        for( int i=0; i<N; i++ ){ sort(ALL(V[i]));V[i].resize( unique(ALL(V[i])) - V[i].begin() ); }
         return V;
     }
 

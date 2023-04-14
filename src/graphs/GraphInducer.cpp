@@ -63,40 +63,6 @@ InducedGraphPI GraphInducer::induce(VVPII &V, VI &nodes) {
 }
 
 
-InducedGraphPI GraphInducer::induceNoPerm(VVPII &V, VI &nodes, VI &helper) {
-    InducedGraphPI g;
-    g.nodes = nodes;
-    g.par = &V;
-    int N = SIZE(nodes);
-
-    int M = 0;
-    if( !nodes.empty() ) M = *max_element(ALL(nodes));
-    if( helper.size() <= M ) helper.resize(M+1,-1);
-
-    for(int i=0; i<N; i++) helper[ nodes[i] ] = i;
-
-    g.V = VVPII(nodes.size() );
-    for( int i=0; i<nodes.size(); i++ ){
-        for( auto pr : V[ nodes[i] ] ){
-            int d = pr.first;
-            int w = pr.second;
-
-            while( helper.size() <= d ) helper.push_back(-1);
-
-            int indD = helper[d];
-            if( indD >= 0 ){
-                g.V[ i ].push_back({indD,w} );
-            }
-        }
-    }
-
-    for(int i=0; i<N; i++) helper[ nodes[i] ] = -1; // clearing array
-
-    return g;
-}
-
-
-
 
 ostream& operator<<(ostream& str, InducedGraphPI& g){
     str << "Par: " << *g.par << endl
@@ -106,98 +72,6 @@ ostream& operator<<(ostream& str, InducedGraphPI& g){
     return str;
 }
 
-
-
-vector<InducedGraph> GraphInducer::induceGraphs(VVI &V, VI &colors, const int WILDCARD_COLOR) {
-
-    VPII wildcardEdges; // list of edges that are to be added to every induced graph - edges between two nodes with WILDCARD_COLOR
-    VI wildcardNodes;
-    for( int i=0; i<V.size(); i++ ){
-        if( colors[i] == WILDCARD_COLOR ){
-            wildcardNodes.push_back(i);
-            for( int d : V[i] ){
-                if( colors[d] == WILDCARD_COLOR ) wildcardEdges.push_back( {i,d} );
-            }
-        }
-    }
-
-    int C = *max_element(ALL(colors));
-    vector<InducedGraph> graphs(C);
-    VVI nodes(C+1);
-    for( int i=0; i<colors.size(); i++ ){
-        if( colors[i] != WILDCARD_COLOR ) nodes[ colors[i] ].push_back(i);
-    }
-
-    VI global_perm(V.size(),-1);
-
-    for( int i=0; i<C; i++ ){
-        InducedGraph &g = graphs[i];
-        VI & _nodes = nodes[i];
-
-        g.nodes = nodes[i];
-        g.nodes.insert( g.nodes.end(), ALL(wildcardNodes) );
-        g.perm = unordered_map<int,int>();
-        g.perm.reserve( 2 * ( _nodes.size() + wildcardNodes.size() )  );
-        g.par = &V;
-
-        for( int j=0; j< _nodes.size(); i++ ){
-            g.perm[ _nodes[j] ] = j;
-            global_perm[ _nodes[j] ] = j;
-        }
-
-        // HERE I ADD WILDCARD NODES TO g
-        for( int j=0; j<wildcardNodes.size(); j++ ){
-            int w = wildcardNodes[j];
-            g.perm[ w ] = _nodes.size() + j;
-        }
-
-        // HERE I ADD ALL EDGES BETWEEN TWO NODES WITH WILDCARD COLOR. I have to use g.perm map, because WILDCARD NODES can be in multiple graphs, and i cannot store that values in array
-        for( PII e : wildcardEdges ){
-            int a = g.perm[ e.first ];
-            int b = g.perm[ e.second ];
-            g.V[a].push_back(b);
-        }
-    }
-
-    // HERE I ADD ALL EDGES WITH BEGIN IN NON-WILDCARD NODE
-    for( int i=0; i<V.size(); i++ ){
-        int c = colors[i];
-        InducedGraph &g = graphs[c];
-//        int indI = g.perm[i];
-        int indI = global_perm[i]; // faster than map
-
-        for( int d : V[i] ){
-            if( colors[d] == WILDCARD_COLOR || colors[d] == c  ){
-//                int indD = g.perm[d];
-
-
-                int indD;
-                if( colors[d] == WILDCARD_COLOR ) indD = g.perm[d];
-                else indD = global_perm[d]; // faster than map
-
-                g.V[ indI ].push_back( indD );
-            }
-        }
-    }
-
-    // HERE I ADD ALL EDGES FROM WILDCARD NODES TO NON-WILDCARD NODES
-    for( int i : wildcardNodes ){
-        for( int d : V[i] ){
-            if( colors[d] != WILDCARD_COLOR ){
-                int c = colors[d];
-                InducedGraph &g = graphs[c];
-                int a = g.perm[i];
-//                int b = g.perm[d];
-                int b = global_perm[d]; // faster
-
-                g.V[a].push_back(b);
-            }
-        }
-    }
-
-    clog << "CAUTION! induceGraphs function not tested, not even sure if the implementation was finished!!" << endl;
-    return graphs;
-}
 
 InducedGraph GraphInducer::induce( VVI & V, VPII & edges, bool directed ){
     InducedGraph g;

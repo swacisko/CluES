@@ -28,6 +28,25 @@ namespace RandomNumberGenerators{
 
 }
 
+/**
+ This may be a good alternative if generating numbers using UniformIntGenerator is too slow.
+
+     unsigned long long x=123456789, y=362436069, z=521288629;
+
+     unsigned long long xorshf96() {          //period 2^96-1
+        unsigned long t;
+        x ^= x << 16;
+        x ^= x >> 5;
+        x ^= x << 1;
+
+        t = x;
+        x = y;
+        y = z;
+        z = t ^ x ^ y;
+
+        return z;
+    }
+*/
 
 
 class UniformIntGenerator{
@@ -38,7 +57,7 @@ public:
         unif = std::uniform_int_distribution<long long>(minVal, maxVal);
         if( seed == RandomNumberGenerators::DEFAULT_SEED ){
             rng.seed(lastSeed);
-            lastSeed = (lastSeed + 1) % 1'000'000'007;
+            lastSeed = (lastSeed + 10013) % 1'000'000'007;
         }
         else rng.seed(seed);
     }

@@ -55,6 +55,8 @@ using namespace std;
 #define DEBUG2(x,y) if( DEBUG_NOW_AND_HERE ) { DEBUG(x); DEBUG(y); }
 #define DEBUG3(x,y,z) if( DEBUG_NOW_AND_HERE ) { DEBUG(x); DEBUG(y); DEBUG(z); }
 
+#define ASSERT( cond, msg ) { if(!(cond)){ DEBUG(msg); assert(cond); } }
+
 #define ERROR( x,s ) {  cerr << s << endl; DEBUG(x); exit(1); }
 
 #define WRP(p) "(" << p.ST << "," << p.ND << ")"
@@ -62,6 +64,7 @@ using namespace std;
 #define WRITE_ALL(V,s,t) { cerr << s << endl;  REP( i,SIZE(V) ){ cerr  << i+t << " ---- ";  FOREACH(it,V[i]) cerr << *it+t << ", "; cerr << endl;     } }
 #define CLEAR( dst,quant ) memset( dst,0, (quant)*sizeof( __typeof(*dst) ) );
 #define ENDL(x) REP(crow,(x)) clog << endl;
+#define ENDLS(x,c) REP(crow,(x)) clog << c << flush;
 
 
 

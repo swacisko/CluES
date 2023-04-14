@@ -28,6 +28,8 @@ namespace GraphReader {
      */
     extern VVI readGraphDIMACSWunweighed(istream &cin, bool edgeFoolowE = false);
 
+    extern VVI readGraphDIMACSdirectedUnweighted(istream &cin, bool edgeFoolowE = false);
+
 
 };
 
