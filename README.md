@@ -10,7 +10,6 @@ The main algorithm works in iterations, in each iteration a new cluster editing 
 
 CMake VERSION 3.10.2 or higher<br>
 c++ 17 or higher
-
 <br>
 
 **Installation**:
@@ -23,7 +22,6 @@ cmake ..<br>
 make
 
 After this, the executable file named "CluES" should be in the "build" directory
-
 <br>
 
 **Usage:**
@@ -34,7 +32,6 @@ Given a graph in a file example_input.gr, you can run CluES in the following way
 
 CluES will run for exactly 600 seconds. 
 Maximum run time can be set by changing variable _Global::max_runtime_in_seconds_ to a specified value in main_CE.cpp file.
-
 <br>
 
 **Generating tests:**
