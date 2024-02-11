@@ -1,7 +1,3 @@
-//
-// Created by sylwester on 3/8/21.
-//
-
 #ifndef ALGORITHMSPROJECT_MAIN_CE_H
 #define ALGORITHMSPROJECT_MAIN_CE_H
 
@@ -13,7 +9,6 @@
 #include <clues/heur/State.h>
 #include <clues/heur/SwapCandidates/SwapCandidate.h>
 #include <clues/heur/EOCreators/ComponentExpansion.h>
-//#include <clues/heur/EOCreators/FlowCutter.h>
 #include <clues/heur/Global.h>
 #include <clues/kernelization/CEKernelizer.h>
 #include <clues/kernelization/CriticalClique.h>
@@ -24,8 +19,6 @@
 
 #include "Makros.h"
 
-void kernelizationCompare();
-
-void main_CE();
+map<string,int64_t>  runCluES(VVI V, Config cnf);
 
 #endif //ALGORITHMSPROJECT_MAIN_CE_H

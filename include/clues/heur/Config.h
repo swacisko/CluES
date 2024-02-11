@@ -147,16 +147,16 @@ public:
     /**
      * Number of 'Large' iterations of the main algorithms after which partition or graph will be updated.
      */
-    int granularity_frequency = 10;
+    int granularity_frequency = 5;
 
     /**
      * If true, then in the constructor of Solver object, kernelization algorithms will be used to create initial
      * partition. Kernelization will be run not longer (roughly, until current function ends its work) than
      * [max_kernelization_time_in_sec] seconds.
      */
-    bool use_kernelization = false;
-    bool use_only_fast_exact_kernelization = true; // uses only rules 1, 15 and 16
-    bool use_heuristic_kernelization = true;
+    constexpr static bool use_kernelization = false;
+    bool use_only_fast_exact_kernelization = false; // uses only rules 1, 15 and 16
+    bool use_heuristic_kernelization = false;
     double max_kernelization_time_in_sec = 60;
 
 //    ******************* NEG
@@ -164,22 +164,18 @@ public:
      * Maximum number of perturbations done by NEG
      */
     int neg_max_perturb = 10;
-    /**
-     * Maximum number of nonnegative iterations done by NEG
-     */
-    int neg_max_nonneg_iters = 10;
 
     /**
      * if true, then edge moves will be checked (in E * sqrt(E))
      */
-    bool neg_use_edge_swaps = true;
+    bool neg_use_edge_swaps = false;
     int neg_edge_swaps_frequency = 15;
-    bool neg_use_edge_repulsion = true;
+    bool neg_use_edge_repulsion = false;
 
     double neg_perm_fraction = 1.0;
 
     int neg_max_best_cl_size_triangle_swaps = 2;
-    bool neg_use_triangle_swaps_to_other_clusters = true;
+    bool neg_use_triangle_swaps_to_other_clusters = false;
 
     /**
      * Only clusters of that size or large will be considered in Solver::localSearch in ComponentExpansionRepulsion
@@ -193,28 +189,33 @@ public:
      * If 1, then triangle moves will be checked only to an empty cluster (in E * sqrt(E))
      * If 2, then triangle moves will be checked to all clusters (TIME-CONSUMING!!)
      */
-    int neg_use_triangle_swaps = 1;
+    bool neg_use_triangle_swaps = false;
     int neg_triangle_swaps_frequency = 50;
     int neg_chain2_swaps_frequency = 29;
     int neg_node_interchanging_frequency = 25;
 
+    bool use_component_attraction = false;
+    bool use_component_repulsion = false;
+
+    bool neg_allow_perturbations = true;
+
     /**
      * If true, then node interchanging between two clusters will be used (swapping nodes)
      */
-    bool neg_use_node_interchange = true;
+    bool neg_use_node_interchange = false;
 
     /**
      * If true, then cluster joining will be checked in each iteration of NEG
      */
     bool neg_use_join_clusters = false;
 
-    bool neg_use_queue_propagation = true;
+    bool neg_use_queue_propagation = false;
 
-    bool neg_use_chain2_swaps = true;
+    bool neg_use_chain2_swaps = false;
 
-    bool neg_use_two_node_swaps = true;
+    bool neg_use_two_node_swaps = false;
 
-    int neg_move_frequency = 2;
+    int neg_move_frequency = 1;
 
     /**
      * If true, then NEG_Nomap and NEG_W1 will not be used (as they are much slower on some graphs).
@@ -225,10 +226,7 @@ public:
 
     //    ******************* NEG
 
-    bool solver_use_only_neg_to_create_known_solutions = true;
     bool solver_improve_best_known_solution_using_local_search = true;
-
-    int solver_max_rec_depth_run_fast = 3;
 
     /**
      * Those values will be propagated to swap candidate creators.
@@ -264,7 +262,8 @@ public:
     /**
      * Type of state initialization. By default it is RANDOM_MATCHING
      */
-    StateInitializationType state_init_type = RANDOM_STATE_PERM;
+//    StateInitializationType state_init_type = RANDOM_STATE_PERM;
+    StateInitializationType state_init_type = RANDOM_MATCHING;
 
     /**
      * This is a MASK!! That is if [coarsen_mode] & option is > 0, then the option will be applied.
@@ -279,7 +278,7 @@ public:
      */
     bool solver_run_fast_induce_first_solution_from_lower_levels = false;
 
-    bool neg_do_not_perturb_if_improved = false;
+//    bool neg_do_not_perturb_if_improved = false;
 };
 
 #endif //CESWAT_CONFIG_H

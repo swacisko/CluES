@@ -64,7 +64,7 @@ public:
     /**
      * Creates a set of known solutions using run_fast()
      */
-    void createKnownSolutionsUsingRunFast();
+//    void createKnownSolutionsUsingRunFast();
 
     /**
      * Refines result after coarsening. Uses [partition] to refine.

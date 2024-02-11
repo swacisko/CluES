@@ -12,7 +12,7 @@
 
 namespace Global{
 
-    extern volatile sig_atomic_t tle;
+    extern map<string,int64_t> counters;
 
     extern int max_runtime_in_seconds;
 
@@ -34,32 +34,12 @@ namespace Global{
      */
     extern int secondsFromStart();
 
-    /**
-     *
-     * @param signum
-     */
-    extern void terminate(int signum);
-
-
-    /**
-     * Adds handling SIGTERM signals
-     */
-    void addSigtermCheck();
 
     /**
      * Sets stack size
      */
     void increaseStack();
 
-    /**
-     * Maximum execution time in seconds
-     */
-//    extern int max_execution_time = 600;
-
-    /**
-     * Percentage of maximal time that can be spent on creating known solutions
-     */
-//    extern double max_perc_time_for_known_solutions = 0.5;
 
     /**
      * If true, then

@@ -45,30 +45,4 @@ VVI Config::expansionOrderInitialSetProvider(Cluster *cl) {
     }
 }
 
-void Config::setSpeedMode(SPEED_MODE mode) {
-    speed_mode = mode;
-
-    if( mode <= very_fast ){
-        use_only_common_neighbors_in_swp_cnd_edge = true;
-        for(int i=0; i<swpCndCreatorsToUse.size(); i++){ // removing SwpCndTriangle
-            if( swpCndCreatorsToUse[i] == triangle ){
-                swpCndCreatorsToUse.erase(swpCndCreatorsToUse.begin()+i);
-                break;
-            }
-        }
-    }
-
-    if( mode <= fast ){
-        use_only_empty_cluster_in_swp_cnd_triangle = true;
-    }
-
-    if( mode <= medium_fast ){
-        for(int i=0; i<swpCndCreatorsToUse.size(); i++){ // removing ComponentExpansionAttraction
-            if( swpCndCreatorsToUse[i] == exp_ord_attr ){
-                swpCndCreatorsToUse.erase(swpCndCreatorsToUse.begin()+i);
-                break;
-            }
-        }
-    }
-}
 

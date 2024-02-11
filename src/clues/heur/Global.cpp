@@ -8,24 +8,18 @@
 namespace Global{
     using namespace chrono;
 
-    volatile sig_atomic_t tle = 0;
-
     int max_runtime_in_seconds = 580;
+    map<string,int64_t> counters;
 
     const bool CONTEST_MODE = false;
 
-    const bool disable_all_logs = CONTEST_MODE; // by default should be equal to CONTEST_MODE
-//    const bool disable_all_logs = false; // by default should be equal to CONTEST_MODE
+//    const bool disable_all_logs = CONTEST_MODE; // by default should be equal to CONTEST_MODE
+    const bool disable_all_logs = true; // by default should be equal to CONTEST_MODE
 
     bool checkTle() {
-        //return tle;
         return secondsFromStart() > max_runtime_in_seconds;
     }
 
-    void terminate(int signum) {
-//        cout << "#TEST: Time from start: " << secondsFromStart() << endl;
-        tle = 1;
-    }
 
     using namespace chrono;
     high_resolution_clock::time_point start_time;
@@ -38,13 +32,6 @@ namespace Global{
         chrono::high_resolution_clock::time_point now = high_resolution_clock::now();
         duration<double> time_span = duration_cast<duration<double>>(now - start_time);
         return time_span.count();
-    }
-
-    void addSigtermCheck(){
-        struct sigaction action;
-        memset(&action, 0, sizeof(struct sigaction));
-        action.sa_handler = Global::terminate;
-        sigaction(SIGTERM, &action, NULL);
     }
 
     void increaseStack(){
@@ -66,6 +53,4 @@ namespace Global{
             }
         }
     }
-
-
 }

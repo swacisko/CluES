@@ -113,7 +113,6 @@ void Solver::run_recursive() {
 
     if(recurrence_depth == 0 && cnf->use_kernelization){
         CEKernelizer kern( *origV );
-//        kern.fullKernelization(cnf->use_heuristic_kernelization,0);
 
         if(cnf->use_only_fast_exact_kernelization){ // disable all rules except very fast rules
             for( int i=2; i<kern.MAX_RULES; i++ ) kern.setDisableRule(i,true);
@@ -138,15 +137,8 @@ void Solver::run_recursive() {
     bool use_run_fast = true;
     int N = origV->size();
     int E = GraphUtils::countEdges(*origV);
-//    if( N < 10'000 || E < 200'000 ) use_run_fast = false; // original
-    if( N < 15'000 && E < 200'000 ) use_run_fast = false;
-//    if( N < 15'000 ) use_run_fast = false;
 
-    double density = 2.0*E / N;
-    if(N > 100'000 && density < 4.0) use_run_fast = false; // on large sparse graphs we do NOT want run_fast()
-
-    if(use_run_fast) createKnownSolutionsUsingRunFast();
-    else createKnownSolutions(); // original
+    createKnownSolutions();
 
     if( !Global::checkTle() ) {
         granulateSolution();
@@ -211,27 +203,27 @@ void Solver::run_fast() {
     if( Global::checkTle() ) return;
 //    if( recurrence_depth == max_rec_depth ) return; // original position here
 
-    if(recurrence_depth == 0 && cnf->use_kernelization){
-        CEKernelizer kern( *origV );
+//    if(recurrence_depth == 0 && cnf->use_kernelization){
+//        CEKernelizer kern( *origV );
+//
+//        if(cnf->use_only_fast_exact_kernelization){ // disable all rules except very fast rules
+//            for( int i=2; i<kern.MAX_RULES; i++ ) kern.setDisableRule(i,true);
+//            kern.setDisableRule(15,false);
+//            kern.setDisableRule(16,false);
+//            kern.setDisableRule(2,false);
+//        }
+//
+//        kern.fullKernelization(false,0);
+//        if(cnf->use_heuristic_kernelization) kern.improveKernelizationUsingHeuristicRules();
+//
+//        assert( kern.inCl.size() == N );
+//        partition = kern.inCl;
+//
+//        partition = PaceUtils::properlyRemapPartition(partition);
+//    }
 
-        if(cnf->use_only_fast_exact_kernelization){ // disable all rules except very fast rules
-            for( int i=2; i<kern.MAX_RULES; i++ ) kern.setDisableRule(i,true);
-            kern.setDisableRule(15,false);
-            kern.setDisableRule(16,false);
-            kern.setDisableRule(2,false);
-        }
-
-        kern.fullKernelization(false,0);
-        if(cnf->use_heuristic_kernelization) kern.improveKernelizationUsingHeuristicRules();
-
-        assert( kern.inCl.size() == N );
-        partition = kern.inCl;
-
-        partition = PaceUtils::properlyRemapPartition(partition);
-    }
-
-    int MAX_ITERS_BEFORE = 50 / cnf->neg_perm_fraction; // #TEST
-    int MAX_ITERS_AFTER = 130 / cnf->neg_perm_fraction; // #TEST
+//    int MAX_ITERS_BEFORE = 50 / cnf->neg_perm_fraction; // #TEST
+//    int MAX_ITERS_AFTER = 130 / cnf->neg_perm_fraction; // #TEST
 
     createClusterGraph();
     known_solutions.clear(); known_clg_partitions.clear();
@@ -241,19 +233,20 @@ void Solver::run_fast() {
     auto setNegConfigs = [&]( NEG & neg, double factor = 1.0 ){
         neg.setConfigurations(*cnf);
 
-        neg.use_edge_swaps = true;
-        neg.edge_swaps_frequency = 6;
-        if(E >= 100'000) neg.edge_swaps_frequency = 10;
+//        neg.use_edge_swaps = true;
+//        neg.edge_swaps_frequency = 6;
+//        if(E >= 100'000) neg.edge_swaps_frequency = 10;
 
-        neg.use_triangle_swaps = false; //neg.triangle_swaps_frequency = 23;
-        neg.use_chain2_swaps = false; // neg.chain2_swaps_frequency = 18;
-        neg.use_node_interchanging = false; // neg.node_interchanging_frequency = 18;
-        neg.use_join_clusters = false;
+//        neg.use_triangle_swaps = false; //neg.triangle_swaps_frequency = 23;
+//        neg.use_chain2_swaps = false; // neg.chain2_swaps_frequency = 18;
+//        neg.use_node_interchanging = false; // neg.node_interchanging_frequency = 18;
+//        neg.use_join_clusters = false;
 
-        neg.max_iterations_to_do = MAX_ITERS_BEFORE;
-        neg.move_frequency = cnf->neg_move_frequency;
+//        neg.max_iterations_to_do = MAX_ITERS_BEFORE;
+//        neg.max_iterations_to_do = cnf->neg_max_iterations_to_do;
+//        neg.move_frequency = cnf->neg_move_frequency;
 
-        neg.allow_perturbations = false; // original
+//        neg.allow_perturbations = false; // original
     };
 
     /*
@@ -261,25 +254,25 @@ void Solver::run_fast() {
      */
     int REPS = 3; // original 3
 
-    {
+//    {
+//
+//        REPS = min(REPS,3); // #TEST
+//
+//        const bool USE_LINEAR_SCALE = false;
+//        if(USE_LINEAR_SCALE){ // linearly scaling MAX_ITERS_BEFORE
+//            double A = 500'000;
+//            double B = 1'300'000;
+//            double a = 1 / (B - A);
+//            double b = -a * A;
+//            if (E >= A && E <= B) {
+//                double x = a * E + b;
+//                MAX_ITERS_BEFORE *= (2 - x);
+//                DEBUG(MAX_ITERS_BEFORE);
+//            }
+//        }
+//    }
 
-        REPS = min(REPS,3); // #TEST
-
-        const bool USE_LINEAR_SCALE = false;
-        if(USE_LINEAR_SCALE){ // linearly scaling MAX_ITERS_BEFORE
-            double A = 500'000;
-            double B = 1'300'000;
-            double a = 1 / (B - A);
-            double b = -a * A;
-            if (E >= A && E <= B) {
-                double x = a * E + b;
-                MAX_ITERS_BEFORE *= (2 - x);
-                DEBUG(MAX_ITERS_BEFORE);
-            }
-        }
-    }
-
-    if(recurrence_depth == cnf->solver_max_rec_depth_run_fast) REPS = 1; // #TEST - on last recursion level, getting only one solution - check if to increase recursion depth!
+//    if(recurrence_depth == cnf->solver_max_rec_depth_run_fast) REPS = 1; // #TEST - on last recursion level, getting only one solution - check if to increase recursion depth!
 
     for(int r=0; r<REPS; r++){ // creating initial solution
 
@@ -320,7 +313,6 @@ void Solver::run_fast() {
         if( Global::checkTle() ) break;
     }
 
-    if( recurrence_depth >= cnf->solver_max_rec_depth_run_fast ) return;
     if( Global::checkTle() ) return;
 
     if(!Global::disable_all_logs) {
@@ -351,147 +343,41 @@ void Solver::run_fast() {
         delete st;
         st = new State(clg, SINGLE_NODES);
 
-        // #CAUTION! Shouldn't be here refinement of best_partition?
-        // It would make sense to improve best_partition if it is better than partition returned by recursive call
-        // to run_fast()
         st->applyPartition(partition);
 
-        const bool use_first_neg = true; // original true
+        NEG* neg = createNegForState(st);
+        neg->setConfigurations(*cnf);
 
-        if(use_first_neg){ // NEG-based refinement - first NEG, then local search without NEG
 
-            NEG* neg = createNegForState(st);
-            neg->setConfigurations(*cnf);
 
-//            neg->chain2_swaps_frequency = 35; neg->join_clusters_frequency = 45; // #TEST
-            neg->triangle_swaps_frequency = 30; // original 20
-            if( recurrence_depth > 0 ) neg->use_triangle_swaps_to_other_clusters = false;
+        neg->improve();
+        partition = neg->best_partition;
+        delete neg;
 
-            neg->edge_swaps_frequency = 11; // original value 11
-            neg->max_nonnegative_iters = 20; // originally this was not here - this should disallow any perturbations
-            neg->node_interchanging_frequency = 10; // originally this was not here
+        auto part = PaceUtils::mapClgPartitionToOriginalPartition(clg, partition);
+        compareToBestSolutionAndUpdate(part);
 
-            if( E > 1'000'000 ){ neg->max_nonnegative_iters = 7; /* #TEST #CAUTION - smaller values should be faster*/ }
+        bool improve_using_ls = true;
 
-            if( E > 1'000'000 && (2.0*E / origV->size()) > 50 ) neg->use_triangle_swaps = false;
-            else if( E > 500'000 ){ // #TEST #CAUTION #CAUTION2 - should I disable triangle swaps here?
-                neg->max_nonnegative_iters = 12;
+        if (improve_using_ls) {
+            if (!Global::disable_all_logs){
+                logSpacing(recurrence_depth);
+                clog << endl << "Improving run_fast with local search without NEG" << endl;
             }
-            
-            if(E >= 100'000) neg->use_triangle_swaps = false;
+            auto old_creators = cnf->swpCndCreatorsToUse;
 
-            neg->max_iterations_to_do = MAX_ITERS_AFTER;
-            neg->allow_perturbations = false; // original version
+            auto it = remove(ALL(cnf->swpCndCreatorsToUse), triangle);
+            cnf->swpCndCreatorsToUse.resize(it - cnf->swpCndCreatorsToUse.begin());
 
-            neg->improve();
-            partition = neg->best_partition;
-            delete neg;
+            it = remove(ALL(cnf->swpCndCreatorsToUse), node);
+            cnf->swpCndCreatorsToUse.resize(it - cnf->swpCndCreatorsToUse.begin());
 
-            auto part = PaceUtils::mapClgPartitionToOriginalPartition(clg, partition);
-            compareToBestSolutionAndUpdate(part);
+            partition = best_partition;
+            auto[part_oV, part_clg] = localSearch();
+            compareToBestSolutionAndUpdate(part_oV);
 
-            bool improve_using_ls = true;
-
-            if (improve_using_ls) {
-                if (!Global::disable_all_logs){
-                    logSpacing(recurrence_depth);
-                    clog << endl << "Improving run_fast with local search without NEG" << endl;
-                }
-                auto old_creators = cnf->swpCndCreatorsToUse;
-
-                auto it = remove(ALL(cnf->swpCndCreatorsToUse), triangle);
-                cnf->swpCndCreatorsToUse.resize(it - cnf->swpCndCreatorsToUse.begin());
-
-                it = remove(ALL(cnf->swpCndCreatorsToUse), node);
-                cnf->swpCndCreatorsToUse.resize(it - cnf->swpCndCreatorsToUse.begin());
-
-                partition = best_partition;
-                auto[part_oV, part_clg] = localSearch();
-                compareToBestSolutionAndUpdate(part_oV);
-
-                if (!Global::disable_all_logs) clog << "LS finished" << endl;
-                cnf->swpCndCreatorsToUse = old_creators;
-            }
-
-            bool improve_again_using_neg_map = false;
-            if(improve_again_using_neg_map){
-                if(!Global::disable_all_logs){
-                    logSpacing(recurrence_depth);
-                    clog << "Running NEG_map after LS with chain, node_interchange and joins" << endl;
-                }
-                NodeEdgeGreedy neg(*st);
-                neg.setConfigurations(*cnf);
-                neg.max_iterations_to_do = 30;
-                neg.use_triangle_swaps = false;
-                neg.use_chain2_swaps = true; neg.chain2_swaps_frequency = 13;
-                neg.use_node_interchanging = true; neg.node_interchanging_frequency = 11;
-                neg.use_edge_swaps = true; neg.edge_swaps_frequency = 9;
-                neg.use_join_clusters = true; neg.join_clusters_frequency = 19;
-                neg.allow_perturbations = false;
-                neg.improve();
-                partition = neg.best_partition;
-                auto part = PaceUtils::mapClgPartitionToOriginalPartition(clg, partition);
-                compareToBestSolutionAndUpdate(part);
-            }
-        }
-        else{ // NEG-based refinement - first local search without NEG, then NEG
-            bool improve_using_ls = true;
-
-            if (improve_using_ls) { // #TEST
-                if (!Global::disable_all_logs){
-                    logSpacing(recurrence_depth);
-                    clog << endl << "Improving run_fast with local search without NEG" << endl;
-                }
-                auto old_creators = cnf->swpCndCreatorsToUse;
-
-                auto it = remove(ALL(cnf->swpCndCreatorsToUse), triangle);
-                cnf->swpCndCreatorsToUse.resize(it - cnf->swpCndCreatorsToUse.begin());
-
-                it = remove(ALL(cnf->swpCndCreatorsToUse), node);
-                cnf->swpCndCreatorsToUse.resize(it - cnf->swpCndCreatorsToUse.begin());
-
-                partition = best_partition;
-                auto[part_oV, part_clg] = localSearch();
-                compareToBestSolutionAndUpdate(part_oV);
-
-                if (!Global::disable_all_logs) clog << "LS finished" << endl;
-                cnf->swpCndCreatorsToUse = old_creators;
-            }
-
-            partition = PaceUtils::mapOriginalPartitionToClgPartition(clg, best_partition);
-
-            delete st;
-            st = new State(clg, SINGLE_NODES);
-            st->applyPartition(partition);
-
-            clog << "Proceeding to NEG improvement" << endl;
-
-            NEG* neg = createNegForState(st);
-            neg->setConfigurations(*cnf);
-            neg->triangle_swaps_frequency = 30; // original 20
-            neg->edge_swaps_frequency = 11; // original - not changed
-            neg->max_nonnegative_iters = 20; // originally this was not here - this should disallow any perturbations
-            neg->node_interchanging_frequency = 10; // originally this was not here
-
-            if( E > 1'000'000 ){
-                neg->max_nonnegative_iters = 7; // #TEST #CAUTION - smaller values should be faster
-                neg->use_triangle_swaps = false;
-            }
-
-                // here should be else if(...) statement
-            else if( E > 500'000 ){ // #TEST #CAUTION #CAUTION2 - should I disable triangle swaps here?
-                neg->max_nonnegative_iters = 12;
-            }
-
-            neg->max_iterations_to_do = MAX_ITERS_AFTER;
-            neg->allow_perturbations = false;
-
-            neg->improve();
-            partition = neg->best_partition;
-            delete neg;
-
-            auto part = PaceUtils::mapClgPartitionToOriginalPartition(clg, partition);
-            compareToBestSolutionAndUpdate(part);
+            if (!Global::disable_all_logs) clog << "LS finished" << endl;
+            cnf->swpCndCreatorsToUse = old_creators;
         }
     }
 
@@ -587,8 +473,6 @@ void Solver::granulateSolution() {
                         if (v2.empty()) return true;
                         return v1[0] < v2[0];
                     });
-
-                    clog << sol_cl << "  --->  " << PaceUtils::evaluateSolution(*origV, v) << "  |  " << v << endl;
                 }
             }
         }
@@ -608,7 +492,6 @@ void Solver::granulateSolution() {
         if( debug ){
             clog << "There are " << edges_to_remove.size() << " edges to remove from V, out of " << edges.size()
                  << " all edges" << endl;
-//            clog << "Those edges are: " << edges_to_remove << endl;
         }
         GraphUtils::removeEdges( V, edges_to_remove );
     }
@@ -631,7 +514,6 @@ void Solver::granulateSolution() {
 
         FAU fau(N);
         for( auto & [hash,vec] : zb ){
-//            if(debug) DEBUG(vec);
             for( int i=1; i<vec.size(); i++ ){
                 fau.Union( vec[i], vec[0] );
             }
@@ -651,8 +533,6 @@ void Solver::granulateSolution() {
         }
     }
     else if( cnf->coarsen_mode & contract_matching ){
-//        VVI inPartition(N);
-//        for (int i = 0; i < N; i++) inPartition[partition[i]].push_back(i);
 
         unordered_map<LL,VI> zb;
         for( int i=0; i<clg.N; i++ ){
@@ -671,10 +551,7 @@ void Solver::granulateSolution() {
         vector<tuple<int,int,int>> edges; // (a,b,w)
         VB was(N,false);
 
-//        const int MIN_CL_SIZE_TO_CONTRACT = 3; // #TEST #CAUTION original value 0
-
         for( VI & cl : clusters ){
-//            if( cl.size() < MIN_CL_SIZE_TO_CONTRACT ) continue;
 
             for(int d : cl) was[d] = true;
 
@@ -682,7 +559,6 @@ void Solver::granulateSolution() {
                 for (auto &[p, w] : clg.V[d]) {
                     if (d < p && was[p]) {
                         edges.emplace_back( d,p,w );
-//                        clog << "Adding edge (" << d << "," << p << "," << w << ")" << endl;
                     }
                 }
             }
@@ -717,12 +593,6 @@ void Solver::granulateSolution() {
             }
         });
 
-//        DEBUG(*st);
-//        DEBUG(clg);
-//        clog << "edges sorted: ";
-//        for( auto e : edges ) clog << get<0>(e) << " " << get<1>(e) << " " << get<2>(e) << endl;
-//        exit(1);
-
         FAU fau(N);
         for( VI & cl : clusters ) {
             for( int d : cl ){
@@ -734,7 +604,6 @@ void Solver::granulateSolution() {
 
         for( auto & [a,b,w] : edges ){
             if(!was[a] && !was[b]){
-//                if(debug) clog << "Contracting edge (" << a << "," << b << ")" << endl;
                 fau.Union( clg.clusterNodes[a][0], clg.clusterNodes[b][0] );
                 was[a] = was[b] = true;
             }
@@ -754,8 +623,6 @@ void Solver::granulateSolution() {
         }
     }
 
-//    known_solutions.clear();
-//    known_clg_partitions.clear(); // #TEST - do not clear known_solutions in granulateSolution()
 }
 
 pair<VI,VI> Solver::createPartitionsForGivenState(State &st) {
@@ -1407,12 +1274,12 @@ pair<VI,VI> Solver::localSearch(int iter_cnt) {
         int res_before_small_iter;
         if(!Global::disable_all_logs) res_before_small_iter = PaceUtils::evaluateState(*st); // #TEST FIXME:optimize unnecessary
 
-        auto old_neg_do_not_perturb_if_improved = cnf->neg_do_not_perturb_if_improved;
-        cnf->neg_do_not_perturb_if_improved = true; // #TEST #CAUTION
+//        auto old_neg_do_not_perturb_if_improved = cnf->neg_do_not_perturb_if_improved;
+//        cnf->neg_do_not_perturb_if_improved = true; // #TEST #CAUTION
 
         changes = smallIteration(iter, iter_nonneg);
 
-        cnf->neg_do_not_perturb_if_improved = old_neg_do_not_perturb_if_improved;
+//        cnf->neg_do_not_perturb_if_improved = old_neg_do_not_perturb_if_improved;
 
         if(Global::checkTle()) return createPartitionsForGivenState(*st);
 
@@ -1450,39 +1317,24 @@ void Solver::createKnownSolutions() {
             if(!Global::disable_all_logs) clog << "\rCreating known solutions, r: " << r << " / " << cnf->granularity_frequency << ", best_result: "
                                                << best_result << flush;
 
-            const bool ONLY_NEG = cnf->solver_use_only_neg_to_create_known_solutions;
-            if(ONLY_NEG) {
-                delete st;
-//                st = new State(clg, RANDOM_MATCHING); // original
-                st = new State(clg, cnf->state_init_type); // original
+            delete st;
+            st = new State(clg, cnf->state_init_type); // original
 
-                NEG* neg = createNegForState(st);
-                neg->setConfigurations(*cnf);
-                neg->move_frequency = cnf->neg_move_frequency;
-                neg->improve();
+            NEG* neg = createNegForState(st);
+            neg->setConfigurations(*cnf);
+            neg->move_frequency = cnf->neg_move_frequency;
+            neg->improve();
 
-                VI sol = neg->best_partition;
-                known_clg_partitions.push_back(sol);
+            VI sol = neg->best_partition;
+            known_clg_partitions.push_back(sol);
 
-                if(!Global::disable_all_logs) clog << ", current_result: " << neg->best_result << endl;
+            if(!Global::disable_all_logs) clog << ", current_result: " << neg->best_result << endl;
 
-                sol = PaceUtils::mapClgPartitionToOriginalPartition(clg, sol);
-                known_solutions.push_back(sol);
+            sol = PaceUtils::mapClgPartitionToOriginalPartition(clg, sol);
+            known_solutions.push_back(sol);
 
-                compareToBestSolutionAndUpdate(sol);
-                delete neg;
-            }else{
-                delete st;
-                st = new State(clg, RANDOM_MATCHING);
-
-                auto [part_oV, part_clg] = localSearch();
-                compareToBestSolutionAndUpdate(part_oV);
-
-                if(Global::checkTle()) return;
-
-                known_solutions.push_back(part_oV);
-                known_clg_partitions.push_back(part_clg);
-            }
+            compareToBestSolutionAndUpdate(sol);
+            delete neg;
         }
 
         if(Global::checkTle()) return;
@@ -1519,115 +1371,85 @@ void Solver::createKnownSolutions() {
     }
 }
 
-void Solver::createKnownSolutionsUsingRunFast() {
-    if(Global::checkTle()) return;
-
-    known_solutions.clear();
-
-    int REPS = 1;
-    int E = GraphUtils::countEdges( *origV );
-    if( E < 100'000 ) REPS = 2; // #TEST #CAUTION - parameter change in Solver based on origV sizes
-    else if( E < 60'000 ) REPS = 3;
-    else if( E < 30'000 ) REPS = 4;
-
-    for(int r=0; r<REPS; r++) {
-
-        { // running run_fast()
-            Solver solver(V, partition, *cnf, 0);
-            solver.run_fast();
-
-            compareToBestSolutionAndUpdate(solver.best_partition);
-            partition = PaceUtils::mapOriginalPartitionToClgPartition(clg, solver.best_partition);
-
-            {// originally uncommented
-                known_solutions += solver.known_solutions; // appending known solution
-                known_clg_partitions += solver.known_clg_partitions;
-            }
-        }
-
-        if (!cnf->solver_improve_best_known_solution_using_local_search) { // refinement of a solution found
-            delete st;
-            st = new State(clg, SINGLE_NODES);
-            st->applyPartition(partition);
-
-            NEG* neg = createNegForState(st);
-            neg->setConfigurations(*cnf);
-            neg->triangle_swaps_frequency = 30;
-            neg->edge_swaps_frequency = 11;
-            neg->max_nonnegative_iters = 20;
-            neg->node_interchanging_frequency = 10;
-            neg->chain2_swaps_frequency = 17; // #TEST
-
-            neg->improve();
-            partition = neg->best_partition;
-            delete neg;
-
-            auto part_oV = PaceUtils::mapClgPartitionToOriginalPartition(clg, partition);
-            compareToBestSolutionAndUpdate(part_oV);
-
-            known_solutions.push_back(part_oV);
-            known_clg_partitions.push_back(partition);
-        } else {
-            partition = best_partition;
-            VI clg_part = PaceUtils::mapOriginalPartitionToClgPartition(clg, partition);
-            clg_part = PaceUtils::properlyRemapPartition(clg_part);
-            delete st;
-            st = new State(clg, SINGLE_NODES);
-            st->applyPartition(clg_part);
-
-            auto[part_oV, part_clg] = localSearch();
-            compareToBestSolutionAndUpdate(part_oV);
-
-            if (Global::checkTle()) return;
-
-            known_solutions.push_back(part_oV);
-            known_clg_partitions.push_back(part_clg);
-        }
-
-    }
-}
+//void Solver::createKnownSolutionsUsingRunFast() {
+//    if(Global::checkTle()) return;
+//
+//    known_solutions.clear();
+//
+//    int REPS = 1;
+//    int E = GraphUtils::countEdges( *origV );
+//    if( E < 100'000 ) REPS = 2; // #TEST #CAUTION - parameter change in Solver based on origV sizes
+//    else if( E < 60'000 ) REPS = 3;
+//    else if( E < 30'000 ) REPS = 4;
+//
+//    for(int r=0; r<REPS; r++) {
+//
+//        { // running run_fast()
+//            Solver solver(V, partition, *cnf, 0);
+//            solver.run_fast();
+//
+//            compareToBestSolutionAndUpdate(solver.best_partition);
+//            partition = PaceUtils::mapOriginalPartitionToClgPartition(clg, solver.best_partition);
+//
+//            {// originally uncommented
+//                known_solutions += solver.known_solutions; // appending known solution
+//                known_clg_partitions += solver.known_clg_partitions;
+//            }
+//        }
+//
+//        if (!cnf->solver_improve_best_known_solution_using_local_search) { // refinement of a solution found
+//            delete st;
+//            st = new State(clg, SINGLE_NODES);
+//            st->applyPartition(partition);
+//
+//            NEG* neg = createNegForState(st);
+//            neg->setConfigurations(*cnf);
+//            neg->triangle_swaps_frequency = 30;
+//            neg->edge_swaps_frequency = 11;
+//            neg->max_nonnegative_iters = 20;
+//            neg->node_interchanging_frequency = 10;
+//            neg->chain2_swaps_frequency = 17; // #TEST
+//
+//            neg->improve();
+//            partition = neg->best_partition;
+//            delete neg;
+//
+//            auto part_oV = PaceUtils::mapClgPartitionToOriginalPartition(clg, partition);
+//            compareToBestSolutionAndUpdate(part_oV);
+//
+//            known_solutions.push_back(part_oV);
+//            known_clg_partitions.push_back(partition);
+//        } else {
+//            partition = best_partition;
+//            VI clg_part = PaceUtils::mapOriginalPartitionToClgPartition(clg, partition);
+//            clg_part = PaceUtils::properlyRemapPartition(clg_part);
+//            delete st;
+//            st = new State(clg, SINGLE_NODES);
+//            st->applyPartition(clg_part);
+//
+//            auto[part_oV, part_clg] = localSearch();
+//            compareToBestSolutionAndUpdate(part_oV);
+//
+//            if (Global::checkTle()) return;
+//
+//            known_solutions.push_back(part_oV);
+//            known_clg_partitions.push_back(part_clg);
+//        }
+//
+//    }
+//}
 
 
 void Solver::refineAfterCoarsening() {
     if(!Global::disable_all_logs) clog << endl << endl << "Refinement of solution of  clg nodes: " << clg.V.size() << ", edges: "
                                        << GraphUtils::countEdges( clg.V ) << endl;
 
-//    if(!Global::checkTle()){ // //FIXME:optimize
-//        int before = PaceUtils::evaluateSolution(*origV, partition);
-//        VI clg_part = PaceUtils::mapOriginalPartitionToClgPartition( clg, partition );
-//        VI part = PaceUtils::mapClgPartitionToOriginalPartition(clg, clg_part);
-//        int after = PaceUtils::evaluateSolution( V, part );
-////        DEBUG2(before,after);
-//        assert(before == after);
-//    }
-
     VI clg_part = PaceUtils::mapOriginalPartitionToClgPartition( clg, partition );
-
-//    int before;
-//    if(!Global::checkTle()){
-//        before = PaceUtils::evaluateSolution(*origV, partition);//FIXME:optimize
-//        if(!Global::disable_all_logs) clog << "Before refinement, result: " << before << endl;
-//    }
-
-
 
     delete st;
     st = new State( clg, SINGLE_NODES );
     VVI to_merge = PaceUtils::partitionToClusters(clg_part);
     st->mergeClusters(to_merge);
-
-//    int after;
-//    if(!Global::checkTle()){
-//        after = PaceUtils::evaluateState(*st);//FIXME:optimize
-//        assert( before == after );
-//    }
-//
-//
-//    if(!Global::checkTle()){ // FIXME:optimize
-//        VI clg_part = st->inCl;
-//        VI part = PaceUtils::mapClgPartitionToOriginalPartition(clg, clg_part);
-//        DEBUG(PaceUtils::evaluateSolution( V, part ));
-//    }
 
     auto [part_oV, part_clg] = localSearch();
 

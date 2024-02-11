@@ -215,7 +215,7 @@ tuple<PII, PII, int> NodeEdgeGreedyNomap::getBestEdgeMoveForRange(VI &perm, int 
         clog << "************Trying edge swaps, perm[" << a << ":" << b << "]: " << StandardUtils::getSubarray(perm,a,b) << endl;
         DEBUG(current_result);
         DEBUG(inCl);
-        DEBUG(PaceUtils::partitionToClusters(inCl));
+//        DEBUG(PaceUtils::partitionToClusters(inCl));
         DEBUG(cluster_weights);
         DEBUG(first_free_cluster);
     }

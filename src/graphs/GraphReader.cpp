@@ -35,7 +35,8 @@ namespace GraphReader{
         int edges_read = 0;
 
         while( true ){
-            getline(cin,s,char(10));
+//            getline(cin,s,char(10));
+            getline(cin,s);
 
             if( s[0] == 'c' ){
                 // nothing to do here, this is a comment

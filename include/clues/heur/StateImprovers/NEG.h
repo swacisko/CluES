@@ -169,7 +169,6 @@ public:
     int max_perturbations = 10;
     int perturb_swp_thr = 0;
 
-    int max_nonnegative_iters = 10; // #TEST - original 10
 
     void perturb(int perturbation_mode);
 
@@ -307,7 +306,7 @@ public:
      * if best_result (equal to current_result) < initial_result, then we do not use perturbations, and terminate.
      * This may be used in Solver::localSearch to enable quick interchanging between ExpOrdCreators and NEGs.
      */
-    bool do_not_perturb_if_improved = false;
+//    bool do_not_perturb_if_improved = false;
 
     /**
      * This is used to reduce adding edges to hull, when finding edge swap candidates.
@@ -324,7 +323,6 @@ public:
     /**
      * If true, then edge swaps will be considered.
      * Edge swaps may take time up to E * sqrt(E) for whole iteration.
-     * Edge swaps for given block perm[a:b] will be done only if no negative node swaps were made.
      */
     bool use_edge_swaps = true;
     bool use_edge_repulsion = true;
@@ -346,21 +344,21 @@ public:
      * If 1, then all nodes of 'almost triangle' need to be in different clusters, and move is made only to empty
      * cluster - !!!! this is perhaps not supported yet
      */
-    int use_triangle_swaps = 1;
+    bool use_triangle_swaps = false;
 
     /**
      * If true, then we will check at the end of each iteration if there are two clusters that can be joined
      * with negative/non-positive swap value.
      */
-    bool use_join_clusters = true;
+    bool use_join_clusters = false;
 
-    bool use_chain2_swaps = true;
+    bool use_chain2_swaps = false;
 
     /**
      * Pointer to the number of iterations done. This can be used only inernally, as the object to which this points
      * is local in improve() function.
      */
-    int * iterations_done;
+//    int * iterations_done;
 
     /**
      * Calculates result using PaceUtils::EvaluateSolution and compares it to [current_result]

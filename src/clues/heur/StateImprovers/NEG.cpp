@@ -1,11 +1,3 @@
-//
-// Created by sylwester on 5/24/21.
-//
-
-//
-// Created by sylwester on 4/22/21.
-//
-
 #include <combinatorics/CombinatoricUtils.h>
 #include <clues/heur/PaceUtils.h>
 #include <clues/heur/ConvexHullTrickDynamic.h>
@@ -38,7 +30,6 @@ void NEG::initializeIndependentData(State & st){
 
     inCl = st.inCl;
     degInCl = st.degInCl;
-//    move_frequency = max(1.0, ceil(sqrt(N)));
     move_frequency = 2; // #TEST
 
     VI partition(clg->origV->size(),-1);
@@ -103,10 +94,10 @@ void NEG::improve() {
 
     int nn_iter = 0;
     int iter = 0;
-    iterations_done = &iter;
+//    iterations_done = &iter;
     perturbations_done = 0; //    int perturbations_done = 0;
-    int last_nn_iter = (max_nonnegative_iters-1);
-    int iters_since_last_perturbation = 0;
+//    int last_nn_iter = (max_nonnegative_iters-1);
+//    int iters_since_last_perturbation = 0;
 
     int TRIANGLE_SWAPS_FREQUENCY = triangle_swaps_frequency;
     int EDGE_SWAPS_FREQUENCY = edge_swaps_frequency;
@@ -114,31 +105,7 @@ void NEG::improve() {
     int CHAIN2_FREQUENCY = chain2_swaps_frequency;
     int JOIN_CLUSTERS_FREQUENCY = join_clusters_frequency;
 
-    {
-        double E = GraphUtils::countEdges(clg->V);
-        double avg_deg = 2*E / clg->V.size();
 
-        int MIN_DENSITY = 30; // #TEST!! originally this scaling was present!! - original value 30
-        while( avg_deg > MIN_DENSITY ){
-            TRIANGLE_SWAPS_FREQUENCY *= 1.5;
-            EDGE_SWAPS_FREQUENCY *= 1.5;
-            NODE_INTERCHANING_FREQUENCY *= 1.5;
-            avg_deg /= 2;
-        }
-
-
-	avg_deg = 2*E / clg->V.size();
-		if(avg_deg > 0.1 * N ){
-			use_edge_swaps = false;
-			use_triangle_swaps = false;
-			use_node_interchanging = false;			
-			use_chain2_swaps = false;
-		}
-
-//        DEBUG(EDGE_SWAPS_FREQUENCY);
-//        DEBUG(TRIANGLE_SWAPS_FREQUENCY);
-
-    }
 
     VI iter_nodes_to_check;
     VI perm = CombinatoricUtils::getRandomPermutation(N, rnd.rand());
@@ -149,8 +116,11 @@ void NEG::improve() {
     while( perturbations_done <= max_perturbations ){
         if(iter == max_iterations_to_do) break; // terminate early
 
+//        clog << "NEG::iter: " << iter << endl;
+
         iter++;
-        iters_since_last_perturbation++;
+
+//        iters_since_last_perturbation++;
 
         if(debug){
             clog << endl << "\t***********************iter: " << iter << ", nn_iter: " << nn_iter << ", best: "
@@ -173,9 +143,11 @@ void NEG::improve() {
             queue.assign( perm.begin(), perm.begin() + ( PERM_FRACTION * N) );
         }
 
-        int step = move_frequency;
+//        int step = move_frequency;
 
         while( !queue.empty() ){
+//            clog << "queue.size(): " << queue.size() << endl;
+
             if(Global::checkTle()){
                 if( current_result <= best_result ){
                     best_result = current_result;
@@ -219,14 +191,7 @@ void NEG::improve() {
             //*****************  EDGE MOVE
             bool use_edges_swaps_in_iteration =
                     use_edge_swaps &&
-                    //                    ((nn_iter == last_nn_iter-2) ||
-                    ((nn_iter == min(max(1,last_nn_iter-2), 3)) || // #TEST - early edge swaps
-                     ((iters_since_last_perturbation % EDGE_SWAPS_FREQUENCY) == EDGE_SWAPS_FREQUENCY-1));
-            // #TEST - using edges swaps every 20 node swap iterations
-            /**
-             * using edge swaps only if we are in nonnegative iterations, because it is rather slow
-             * compared to node moves
-             */
+                     ((iter % EDGE_SWAPS_FREQUENCY) == EDGE_SWAPS_FREQUENCY-1);
             if(use_edges_swaps_in_iteration){
                 auto [e,to,val] = getBestEdgeMoveForRange(iter_nodes_to_check, a,b);
 
@@ -240,8 +205,6 @@ void NEG::improve() {
                     moveNodeTo(e.first, to.first);
                     moveNodeTo(e.second, to.second);
 
-//                    if( to.first != to.second && val < 0 ) clog << "Applying edge repulsion with swpval " << val << endl;
-
                     current_result += val;
                 }
                 if(val < 0){
@@ -253,21 +216,13 @@ void NEG::improve() {
             //*****************  TRIANGLE MOVE
             bool use_triangle_swaps_in_iteration =
                     (use_triangle_swaps > 0) &&
-                    //                    ((nn_iter == last_nn_iter) ||
-                    ((nn_iter == min(max(3,last_nn_iter-1), 5)) || // #TEST
-                     ((iters_since_last_perturbation % TRIANGLE_SWAPS_FREQUENCY) == TRIANGLE_SWAPS_FREQUENCY-1));
-            // #TEST - using triangle swaps
+                     ((iter % TRIANGLE_SWAPS_FREQUENCY) == TRIANGLE_SWAPS_FREQUENCY-1);
             if(use_triangle_swaps_in_iteration){
                 auto best = getBestTriangleDiffClToMove(iter_nodes_to_check, a,b);
                 if( best.swpVal() < 0 ){
                     improved = true;
                 }
                 if( best.swpVal() <= perturb_swp_thr ){
-//                    if(!Global::disable_all_logs && !is_empty_cluster[best.getMoveNodesTo()[0]] && best.swpVal() < 0){
-//                        clog << "Found triangle swap with swpval: " << best.swpVal() << " to "
-//                        << (is_empty_cluster[best.getMoveNodesTo()[0]] ? "" : "NON") << "empty cluster" << endl;
-//                    }
-
                     current_result += best.swpVal();
                     VI nodes_before_swap = best.nodes;
                     for( auto [v,c] : best.getNodesToSwap() ) moveNodeTo(v,c);
@@ -276,17 +231,13 @@ void NEG::improve() {
                     for( auto c : best.getNodes() ) addClusterNodesToQueue(inCl[c]); // #TEST - moved from above
                     addClusterNodesToQueue( best.move_node_to[0] );
                 }
-
-//                if(!Global::CONTEST_MODE) assert( compareCurrentResultWithBruteResult() ); // FIXME:remove
             }
 
 //            //*****************  NODE INTERCHANGING
             if(use_node_interchanging_in_inner_loop){ // this should happen only in NEG_map
                 bool use_node_interchanging_in_iteration =
                         use_node_interchanging &&
-                        //                    ((nn_iter == last_nn_iter)||
-                        ((nn_iter == min(max(2, last_nn_iter - 2), 5)) || // #TEST
-                         ((iters_since_last_perturbation % NODE_INTERCHANING_FREQUENCY) == NODE_INTERCHANING_FREQUENCY - 1));
+                         ((iter % NODE_INTERCHANING_FREQUENCY) == NODE_INTERCHANING_FREQUENCY - 1);
                 if (use_node_interchanging_in_iteration) {
 
                     auto best = getBestInterchangeNodePairForInterval(iter_nodes_to_check, a, b);
@@ -315,13 +266,13 @@ void NEG::improve() {
 
         if(Global::checkTle()) break;
 
+//        clog << "End of queue, q.size(): " << queue.size() << endl;
+
         if(!use_node_interchanging_in_inner_loop){ // using node interchanging in outer loop
             //*****************  NODE INTERCHANGING
             bool use_node_interchanging_in_iteration =
                     use_node_interchanging &&
-//                                        ((nn_iter == last_nn_iter-1)||
-                    ((nn_iter == min(max(2,last_nn_iter-2), 5)) || // #TEST
-                     ((iters_since_last_perturbation % NODE_INTERCHANING_FREQUENCY) == NODE_INTERCHANING_FREQUENCY-1)  );
+                     ((iter % NODE_INTERCHANING_FREQUENCY) == NODE_INTERCHANING_FREQUENCY-1);
             if(use_node_interchanging_in_iteration){
                 createClusterNodes();
                 for( int i=0; i<N; i++ ) createEdgesToCluster(i);
@@ -352,29 +303,22 @@ void NEG::improve() {
 
         bool use_chain2_swaps_in_iteration =
                 use_chain2_swaps &&
-//                        (( nn_iter == last_nn_iter-1)  || //#TEST - use only in almost last iteration -as it is rather time-consuming
-                    ((nn_iter == min(max(3,last_nn_iter-2), 4)) || // #TEST
-                  ((iters_since_last_perturbation % CHAIN2_FREQUENCY) == CHAIN2_FREQUENCY-1)  );
+                    (iter % CHAIN2_FREQUENCY) == CHAIN2_FREQUENCY-1;
         if( use_chain2_swaps_in_iteration ){
-//            clog << "\tUsing chain2 swaps" << endl;
             int prev_current = current_result;
             makeChain2Swaps();
             int diff = current_result - prev_current;
             if(diff < 0){
-//                clog << endl << endl << "chain2 improved by " << diff << endl << endl;
                 improved = true;
             }
         }
 
         bool use_join_clusters_in_iteration =
                 use_join_clusters &&
-                        (nn_iter == last_nn_iter); // || //#TEST - do not use here as it is rather time-consuming
-//                 (((iters_since_last_perturbation % JOIN_CLUSTERS_FREQUENCY) == JOIN_CLUSTERS_FREQUENCY-1));
+                (iter % JOIN_CLUSTERS_FREQUENCY) == JOIN_CLUSTERS_FREQUENCY - 1;
         if( use_join_clusters_in_iteration ){
-//            clog << "\tUsing cluster joins" << endl;
             auto to_join = getBestClustersToJoin();
             if( !to_join.empty() ){
-//                clog << endl << "Joining clusters!, current_value: " << current_result << flush;
                 improved = true;
 
                 createClusterNodes();
@@ -392,39 +336,34 @@ void NEG::improve() {
                     for( int d : to_move) moveNodeTo(d,c2);
                 }
                 cluster_nodes.clear();
-//                clog << "  |  After joining clusters current_value: " << current_result << endl;
             }
         }
 
+        Global::counters["iter_" + to_string(iter)] = current_result;
+
         if(Global::checkTle()) break;
+//        if(!Global::CONTEST_MODE) assert( compareCurrentResultWithBruteResult() );
 
-        if(!Global::CONTEST_MODE) assert( compareCurrentResultWithBruteResult() ); // FIXME:remove
-
-        if(!improved){
-            nn_iter++;
-        }
+        if(!improved) nn_iter++;
         else nn_iter = 0;
 
         perturb_swp_thr = 0;
 
-
-        if(nn_iter == max_nonnegative_iters ) {
-            if(!allow_perturbations) break;
+        if( nn_iter > 0 && allow_perturbations ) {
 
             perturb(perturb_mode);
-            if( do_not_perturb_if_improved && best_result < initial_result ) return;
 
             perturbations_done++;
             nn_iter = 0;
-            iters_since_last_perturbation = 0;
 
             shuffleClg();
 
-            if((perturbations_done % max(1,(max_perturbations/3))) == 0){
+            if ((perturbations_done % max(1, (max_perturbations / 3))) == 0) {
                 prefer_cluster_mode++;
                 prefer_cluster_mode %= 3;
             }
         }
+
     }
 
     if( current_result <= best_result ){
@@ -527,14 +466,14 @@ tuple<PII, PII, int> NEG::getBestEdgeMoveForRange(VI &perm, int a, int b) {
 
     const bool debug = false;
 
-    if(debug){
-        clog << "************Trying edge swaps, perm[" << a << ":" << b << "]: " << StandardUtils::getSubarray(perm,a,b) << endl;
-        DEBUG(current_result);
-        DEBUG(inCl);
-        DEBUG(PaceUtils::partitionToClusters(inCl));
-        DEBUG(cluster_weights);
-        DEBUG(first_free_cluster);
-    }
+//    if(debug){
+//        clog << "************Trying edge swaps, perm[" << a << ":" << b << "]: " << StandardUtils::getSubarray(perm,a,b) << endl;
+//        DEBUG(current_result);
+//        DEBUG(inCl);
+//        DEBUG(PaceUtils::partitionToClusters(inCl));
+//        DEBUG(cluster_weights);
+//        DEBUG(first_free_cluster);
+//    }
 
     int best_swpval = 1e9;
     PII best_e = {-1,-1};
@@ -688,8 +627,6 @@ void NEG::perturb( int perturbation_mode ) {
         best_partition = PaceUtils::properlyRemapPartition(inCl);
     }
 
-    if( do_not_perturb_if_improved && best_result < initial_result ) return;
-
     if(Global::checkTle()) return;
 
     if(perturbation_mode == 0){
@@ -834,8 +771,10 @@ void NEG::joinClustersInPairs() {
 //}
 
 void NEG::setConfigurations(Config &cnf) {
+    allow_perturbations = cnf.neg_allow_perturbations; // original version
+    max_iterations_to_do = cnf.neg_max_iterations_to_do;
+
     max_perturbations = cnf.neg_max_perturb;
-    max_nonnegative_iters = cnf.neg_max_nonneg_iters;
     use_edge_swaps = cnf.neg_use_edge_swaps;
     use_triangle_swaps = cnf.neg_use_triangle_swaps;
     use_queue_propagation = cnf.neg_use_queue_propagation;
@@ -845,11 +784,10 @@ void NEG::setConfigurations(Config &cnf) {
     use_two_node_swaps = cnf.neg_use_two_node_swaps;
     perm_fraction = cnf.neg_perm_fraction;
 
-    move_frequency = cnf.neg_move_frequency; // #TEST - this was not here earlier
+    move_frequency = cnf.neg_move_frequency;
 
     edge_swaps_frequency = cnf.neg_edge_swaps_frequency;
     triangle_swaps_frequency = cnf.neg_triangle_swaps_frequency;
-    do_not_perturb_if_improved = cnf.neg_do_not_perturb_if_improved;
     chain2_swaps_frequency = cnf.neg_chain2_swaps_frequency;
     node_interchanging_frequency = cnf.neg_node_interchanging_frequency;
     use_edge_repulsion = cnf.neg_use_edge_repulsion;
@@ -1229,12 +1167,12 @@ bool NEG::makeChain2Swaps() {
     createClusterNodes();
     for( int i=0; i<N; i++ ) createEdgesToCluster(i);
 
-    if(debug){
-        ENDL(10);
-        DEBUG(cluster_nodes);
-        DEBUG(cluster_weights);
-        DEBUG(first_free_cluster);
-    }
+//    if(debug){
+//        ENDL(10);
+//        DEBUG(cluster_nodes);
+//        DEBUG(cluster_weights);
+//        DEBUG(first_free_cluster);
+//    }
 
     bool improved = false;
     const int EMPTY_CLUSTER = *first_free_cluster.begin();
