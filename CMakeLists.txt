@@ -62,6 +62,8 @@ include_directories(
         include/utils
         include/datastructures
         include/clues
+        include/combinatorics/*
+        include/datastructures/*
         experiments
         )
 
@@ -77,6 +79,10 @@ file(GLOB SOURCES
 
         src/utils/RandomNumberGenerators.cpp
         src/utils/TimeMeasurer.cpp
+
+        src/*
+        src/*/*
+        src/*/*/*
 
         src/clues/CETestGraphGenerator.cpp
         experiments/bm_exp.cpp

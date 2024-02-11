@@ -7,6 +7,8 @@
 #include "StandardUtils.h"
 #include "Stopwatch.h"
 #include "benchmark/benchmark.h"
+#include "GraphReader.h"
+#include "heur/Config.h"
 
 
 class BM_CluES_exp : public benchmark::Fixture {
@@ -62,11 +64,10 @@ constexpr int CR = 1 << 7; // component repulsion
 
 
 VVI readGraph(istream & str){
-
-    return {};
+    return GraphReader::readGraphDIMACSWunweighed( str, false );
 }
 
-void runCluES(VVI & V){
+void runCluES(VVI & V, Config cnf){
 
 
 }
@@ -83,13 +84,14 @@ void runOnInstance( benchmark::State & st, const string& cname ){
         auto path = BM_CluES_exp::getFilePath(cname, psid, iter);
         ifstream str(path);
         auto V = readGraph(str);
+        Config cnf;
 
         st.ResumeTiming();
 
 
 
 
-        runCluES( V );
+        runCluES( V, config );
 
     }
 
