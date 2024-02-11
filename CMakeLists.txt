@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.14)
-project(CluES)
+project(CluES_exp)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 #******************************************************************************************  Google-tests
-configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
+configure_file(CMakeLists.txt.gtest googletest-download/CMakeLists.txt)
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
         RESULT_VARIABLE result
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
@@ -26,7 +26,33 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
 #******************************************************************************************  Google-tests
 
 
-SET(CMAKE_CXX_FLAGS "-std=c++17 -O3")
+##********************************************************************* google-benchmark
+set(CMAKE_BUILD_TYPE Release) # this enables building googlebenchmark in release mode
+
+configure_file(CMakeLists.txt.gbench googlebenchmark-download/CMakeLists.txt)
+#execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" . # build in debug mode
+execute_process(COMMAND ${CMAKE_COMMAND} "${CMAKE_GENERATOR}" . # build in release mode
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-download )
+if(result)
+    message(FATAL_ERROR "CMake step for googlebenchmark failed: ${result}")
+endif()
+execute_process(COMMAND ${CMAKE_COMMAND} --build .
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-download )
+if(result)
+    message(FATAL_ERROR "Build step for googlebenchmark failed: ${result}")
+endif()
+#
+add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-src
+        ${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-build
+        EXCLUDE_FROM_ALL)
+
+
+#********************************************************************* google-benchmark
+
+
+SET(CMAKE_CXX_FLAGS "-std=c++20 -O3 -march=native")
 #***************************** Cluster Editing
 
 include_directories(
@@ -36,6 +62,7 @@ include_directories(
         include/utils
         include/datastructures
         include/clues
+        experiments
         )
 
 file(GLOB SOURCES
@@ -52,6 +79,8 @@ file(GLOB SOURCES
         src/utils/TimeMeasurer.cpp
 
         src/clues/CETestGraphGenerator.cpp
+        experiments/bm_exp.cpp
+        experiments/Stopwatch.cpp
 
         ) # include all source files
 
@@ -59,5 +88,6 @@ file(GLOB SOURCES
 
 
 
-add_executable(CluES "main.cpp" ${SOURCES})
-target_link_libraries( CluES stdc++fs )
+add_executable(CluES_exp ${SOURCES})
+target_link_libraries(CluES_exp benchmark::benchmark)
+target_link_libraries( CluES_exp stdc++fs )
