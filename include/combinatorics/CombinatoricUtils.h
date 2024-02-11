@@ -20,26 +20,37 @@ namespace CombinatoricUtils{
     extern VI getRandomPermutation( int N, unsigned seed );
 
     /**
-     * @return set difference {0, ... , N-1} \ A
+     *
+     * @param N
+     * @param A
+     * @return set difference  {0, ... , N-1} \ A
      */
     extern VI getFullSetDifference( int N, VI  A );
 
     /**
+     *
+     * @param U
+     * @param N
      * @return random N-element sequence with elements from universe {0, ... , U}
      */
     extern VI getRandomSequence( int U, int N );
 
     /**
+     *
+     * @param U
+     * @param L
      * @return random subset of elements from universe {0,...,U}
      */
     extern VI getRandomSubset( int U, int L );
-    extern VLL getRandomSubset( LL U, LL L, unsigned seed = 1 );
 
     /**
+     *
+     * @param U
+     * @param L
+     * @param seed
      * @return random subset of elements from universe {0,...,U}, using specified seed
      */
     extern VI getRandomSubset( int U, int L, unsigned seed );
-    extern VLL getRandomSubset( LL U, LL L, unsigned seed );
 
 
     /**

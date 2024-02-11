@@ -91,7 +91,7 @@ void runOnInstance( benchmark::State & st, const string& cname ){
 
 
 
-        runCluES( V, config );
+        runCluES( V, cnf );
 
     }
 

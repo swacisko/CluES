@@ -38,6 +38,20 @@ namespace CombinatoricUtils{
     VI getRandomSubset( int U, int L ){
         UniformIntGenerator rnd(0,1e9);
         return getRandomSubset(U,L,rnd.rand());
+
+        UniformIntGenerator gen(0,U);
+
+        VI res;
+        if( L < U / 20 ){
+            unordered_set<int> zb;
+            while( zb.size() < L ) zb.insert( gen.rand() );
+            res = VI(ALL(zb));
+        }else{
+            VI perm = getRandomPermutation(U+1, rnd.rand());
+            if( L < perm.size() ) return VI( perm.begin(), perm.begin() + L );
+            else return VI( ALL(perm) );
+        }
+        return res;
     }
 
     VI getRandomSubset( int U, int L, unsigned seed ){
@@ -56,29 +70,14 @@ namespace CombinatoricUtils{
         return res;
     }
 
-    VLL getRandomSubset( LL U, LL L, unsigned seed ){
-        assert( L <= U );
-        UniformIntGenerator gen(0,U, seed == 1 ? RandomNumberGenerators::DEFAULT_SEED : seed);
-
-        VLL res;
-        if( L < U / 20 ){
-            unordered_set<LL> zb;
-            while( zb.size() < L ) zb.insert( gen.rand() );
-            res = VLL(ALL(zb));
-        }else{
-            VI permint = getRandomPermutation(U+1, seed);
-            res.resize(L);
-            copy( permint.begin(), permint.begin()+L, res.begin() );
-        }
-        return res;
-    }
-
 
     VI getFullSetDifference(int N, VI A) {
-        VB helper(N,false);
-        for(int d : A) helper[d] = true;
-        VI res; res.reserve(N-A.size());
-        for(int i=0; i<N; i++) if(!helper[i]) res.push_back(i);
+        VI perm(N);
+        iota(ALL(perm),0);
+        VI res;
+        VI A2 = A;
+        sort( ALL(A2) );
+        set_difference( ALL(perm), ALL(A2), back_inserter(res) );
         return res;
     }
 
@@ -86,6 +85,7 @@ namespace CombinatoricUtils{
 
         VI seq;
         function< void( int ind ) > generator = [&generator, &sets, &fun, &seq]( int ind ){
+
 
                 for( int i=0; i<sets[ind]; i++ ){
                     seq.push_back(i);
@@ -98,6 +98,7 @@ namespace CombinatoricUtils{
 
                 }
         };
+
 
         generator(0);
     }

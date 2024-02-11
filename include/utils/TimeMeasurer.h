@@ -32,16 +32,10 @@ public:
     static void start(string option){ startMeasurement(option); }
 
     static float getMeasurementTimeInSeconds(string option);
-    static float getMeasurementTimeInMilliseconds(string option);
     static map<string,float> getAllMeasurements(); // returns all measurements in second
 
     static void writeAllMeasurements(); // writes all measurements
     static void write(){ writeAllMeasurements(); }
-
-    /**
-     * Writes time that was taken by given option
-     */
-    static void write(string option);
 
     /**
      * Resets all options - clears the whole time measurer
@@ -77,8 +71,7 @@ private:
 
     
     
-//    static map<string,LL> times;
-    static map<string,std::chrono::time_point<std::chrono::steady_clock> > times;
+    static map<string,LL> times;
     static map<string,LL> timesTotal; // total time of measurement for given parameter in clock() units (CLICKS_PER_SEC). Sum of times between startMEasurement() and stopMeasurement()
 };
 

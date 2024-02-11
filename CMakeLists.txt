@@ -83,6 +83,7 @@ file(GLOB SOURCES
         src/*
         src/*/*
         src/*/*/*
+        src/*/*/*/*
 
         src/clues/CETestGraphGenerator.cpp
         experiments/bm_exp.cpp
@@ -96,4 +97,6 @@ file(GLOB SOURCES
 
 add_executable(CluES_exp ${SOURCES})
 target_link_libraries(CluES_exp benchmark::benchmark)
+target_link_libraries(CluES_exp gtest)
+target_link_libraries(CluES_exp gmock)
 target_link_libraries( CluES_exp stdc++fs )
