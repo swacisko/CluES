@@ -10,6 +10,8 @@
 #include "GraphReader.h"
 #include "heur/Config.h"
 #include "clues/main_CE.h"
+#include "heur/StateImprovers/NodeEdgeGreedyNomap.h"
+#include "heur/StateImprovers/NodeEdgeGreedy.h"
 
 
 class BM_CluES_exp : public benchmark::Fixture {
@@ -83,6 +85,33 @@ auto runCluESForConfiguration(VVI & V, Config cnf){
     return counters;
 }
 
+auto runNegForConfigurations( VVI V, Config cnf ){
+    VI init_part(V.size());
+    iota(ALL(init_part),0);
+
+    ClusterGraph clg(&V,init_part);
+    State st(clg, RANDOM_MATCHING);
+    NEG* neg;
+    constexpr bool use_neg_nomap = true;
+    if constexpr (use_neg_nomap){
+        neg = new NodeEdgeGreedyNomap(st);
+    }else{
+        neg = new NodeEdgeGreedy(st);
+    }
+    neg->setConfigurations(cnf);
+
+    map<string,int64_t> counters;
+    neg->perturb_mode = 0; // splitting clusters
+
+    Global::startAlg();
+    neg->counters = &counters;
+    neg->improve();
+    clog << "Best result found by neg: " << neg->best_result << endl;
+
+
+    return counters;
+}
+
 auto createConfiguration( int rec_depth, int ls_mask, int max_perturbations,
                           int nonstandard_move_frequencies, int ls_iterations ){
 
@@ -92,6 +121,7 @@ auto createConfiguration( int rec_depth, int ls_mask, int max_perturbations,
     if( max_perturbations == 0 ) cnf.neg_allow_perturbations = false;
 
     cnf.neg_max_iterations_to_do = ls_iterations;
+
 
     cnf.neg_use_edge_swaps = ls_mask & EM;
     if(ls_mask & EM){
@@ -106,7 +136,19 @@ auto createConfiguration( int rec_depth, int ls_mask, int max_perturbations,
     cnf.neg_use_triangle_swaps = ls_mask & TM;
     if(ls_mask & TM){
         cnf.neg_triangle_swaps_frequency = nonstandard_move_frequencies++;
+        cnf.neg_use_triangle_swaps_to_other_clusters = false;
     }
+
+    cnf.neg_use_join_clusters = ls_mask & CJ;
+    if( ls_mask & CJ ){
+        cnf.neg_join_clusters_frequency = nonstandard_move_frequencies++;
+    }
+
+    cnf.neg_use_node_interchange = ls_mask & NS;
+    if( ls_mask & NS ){
+        cnf.neg_node_interchanging_frequency = nonstandard_move_frequencies++;
+    }
+
 
 
     cnf.swpCndCreatorsToUse.clear();
@@ -140,7 +182,8 @@ void runOnInstance( benchmark::State & st, const string& cname ){
         st.PauseTiming();
 
         auto path = BM_CluES_exp::getFilePath(cname, psid, rep);
-        assert( filesystem::exists(path) ); DEBUG(path);
+        assert( filesystem::exists(path) );// DEBUG(path);
+        clog << "Running test for path: " << path << endl;
         ifstream str(path);
         auto V = readGraph(str);
         str.close();
@@ -149,7 +192,16 @@ void runOnInstance( benchmark::State & st, const string& cname ){
                               nonstandard_move_frequencies, ls_iterations );
         st.ResumeTiming();
 
-        auto counters = runCluESForConfiguration( V, cnf );
+
+        map<string, int64_t> counters;
+        if(rec_depth == 0){
+            counters = runNegForConfigurations(V, cnf);
+        }
+        else{
+            counters = runCluESForConfiguration( V, cnf );
+        }
+
+//        clog << "There are " << counters.size() << " counters created" << endl;
 
         // update counters
         st.PauseTiming();
@@ -185,19 +237,20 @@ int main(int argc, char** argv) {
 
 
     auto class_names = vector<string>{ {"A", "B", "C", "D"} };
-    auto params_set_ids = VI{ { 22, 24, 20, 24 } };
+//    auto params_set_ids = VI{ { 22, 24, 20, 24 } };
+    auto params_set_ids = VI{ { 3,3,3,3 } }; // #TEST - just to create small benchmarks for plotting
     string delim = "__";
 
-    constexpr bool register_ls_iteration_tests = true;
+    constexpr bool register_rec_and_perturb = false;
 
-    if constexpr (register_ls_iteration_tests) {
+    if constexpr (register_rec_and_perturb) {
 
         for (auto [cname, psid]: zip(class_names, params_set_ids)) {
 
-            string name = "iteration_ls" + delim + cname;
+            string name = "full_clues" + delim + cname;
 
             auto bm = benchmark::RegisterBenchmark(name, runOnInstance, cname)
-                    ->ArgsProduct({
+                   ->ArgsProduct({
                         benchmark::CreateDenseRange(1, psid, 1),
                         {
                             NM,
@@ -208,7 +261,7 @@ int main(int argc, char** argv) {
                             NM+EM+CA+CR,
                             (1<<8) - 1 // full mask, using all moves
                         }, // masks with used ls moves
-                        {1}, // recursion depth
+                        benchmark::CreateDenseRange(1,5,1), // recursion depth
                         {5,10,20}, // maximum number of perturbations done in NEG
                         {5,10,20}, // nonstandard move frequencies
                         {50, 100, 150}, // lS_iterations,  total number of iterations for local search
@@ -218,10 +271,89 @@ int main(int argc, char** argv) {
     }
 
 
+
+
+
+    constexpr bool register_iteration_tests = false;
+
+    if constexpr (register_iteration_tests) {
+        for (auto [cname, psid]: zip(class_names, params_set_ids)) {
+            string name = "iteration_ls" + delim + cname;
+            auto bm = benchmark::RegisterBenchmark(name, runOnInstance, cname)
+                    ->ArgsProduct({
+                                          benchmark::CreateDenseRange(1, psid, 1),
+                                          {
+                                                  NM,
+                                                  NM + EM,
+                                                  NM + EM + TM,
+                                                  NM + DM + CJ + NS,
+                                                  NM + CA + CR,
+                                                  NM + EM + CA + CR,
+                                                  (1 << 8) - 1 // full mask, using all moves
+                                          }, // masks with used ls moves
+                                          {0}, // recursion depth
+                                          benchmark::CreateDenseRange(10, 50,
+                                                                      10), // maximum number of perturbations done in NEG
+                                          benchmark::CreateDenseRange(5, 50, 5), // nonstandard move frequencies
+                                          {50, 100, 150}, // lS_iterations,  total number of iterations for local search
+                                  });
+            specifyBenchmarkParameters(bm);
+        }
+    }
+
+
+
+    constexpr bool register_minimalistic_iteration_tests = true;
+
+    if constexpr (register_minimalistic_iteration_tests) {
+        for (auto [cname, psid]: zip(class_names, params_set_ids)) {
+            string name = "iteration_min_ls" + delim + cname;
+            auto bm = benchmark::RegisterBenchmark(name, runOnInstance, cname)
+//                    ->ArgsProduct({
+//                              benchmark::CreateDenseRange(1, psid, 1),
+//                              {
+//                                      NM,
+//                                      NM+EM,
+//                                      NM+EM+TM,
+//                                      NM+DM+CJ+NS,
+//                                      NM+EM+TM+CJ+NS+DM,
+//    //                                                  (1<<8) - 1 // full mask, using all moves
+//                              }, // masks with used ls moves
+//                              {0}, // recursion depth
+//                              {0}, // maximum number of perturbations done in NEG
+//                              benchmark::CreateDenseRange(5,30,5), // nonstandard move frequencies
+//                              {50, 100, 150}, // lS_iterations,  total number of iterations for local search
+//                      });
+                    ->ArgsProduct({
+                              benchmark::CreateDenseRange(1, psid, 1),
+                              {
+                                      NM,
+                                      NM+EM,
+//                                      NM+EM+CJ+NS+DM,
+//                                      NM+EM+TM,
+//                                      NM+EM+TM+CJ+NS+DM,
+                                      //                                                  (1<<8) - 1 // full mask, using all moves
+                              }, // masks with used ls moves
+                              {0}, // recursion depth
+                              {0}, // maximum number of perturbations done in NEG
+                              {10}, // nonstandard move frequencies
+                              {100}, // ls_iterations,  total number of iterations for local search
+                      });
+            specifyBenchmarkParameters(bm);
+        }
+    }
+
+
+
+
+
+
+
 //    benchmark::SetBenchmarkFilter( "A*" );
 //    benchmark::SetBenchmarkFilter( "B*" );
 //    benchmark::SetBenchmarkFilter( "C*" );
 //    benchmark::SetBenchmarkFilter( "D*" );
+    benchmark::SetBenchmarkFilter( "iteration_min_ls" );
 
     benchmark::Initialize(&argc, argv);
     benchmark::RunSpecifiedBenchmarks();

@@ -482,6 +482,7 @@ void NodeEdgeGreedyNomap::moveNodeTo(int v, int to) {
     }
 
     if(cluster_weights[cl_v] == 0){
+        assert(!first_free_cluster.contains(cl_v));
         first_free_cluster.insert(cl_v);
         is_empty_cluster[cl_v] = true;
     }

@@ -9,6 +9,7 @@
 #include <clues/heur/Config.h>
 #include "clues/heur/State.h"
 #include "clues/heur/SwapCandidates/SwapCandidate.h"
+#include "../Global.h"
 
 /**
  * Algorithm works in iterations.
@@ -49,6 +50,8 @@ public:
      * @param max_nonnegative_iters maximum number of iterations in which all candidates had swap value >= 0
      */
     virtual void improve();
+
+    map<string,int64_t> *counters = &Global::counters;
 
 //private:
 

@@ -113,6 +113,30 @@ void NEG::improve() {
     queue.clear();
     in_queue = VB(N,false);
 
+
+
+
+
+    constexpr bool count_ls_application_times = true;
+    VI iter_counted(1<<12);
+    // #TEST #CAUTION these values are copy-pasted from bm_exp.cpp, in there are changes, need to be updated here as well
+    constexpr int NM = 1 << 0; // node move
+    constexpr int EM = 1 << 1; // edge move
+    constexpr int TM = 1 << 2; // triangle move
+    constexpr int CJ = 1 << 3; // cluster join
+    constexpr int NS = 1 << 4; // node swap
+    constexpr int DM = 1 << 5; // double move
+
+    auto increaseApplicationCount = [&](auto alg, string label){
+        if constexpr (count_ls_application_times){
+            if( iter_counted[alg] < iter ) (*counters)[label]++;
+            iter_counted[alg] = iter;
+        }
+    };
+
+
+
+
     while( perturbations_done <= max_perturbations ){
         if(iter == max_iterations_to_do) break; // terminate early
 
@@ -169,6 +193,8 @@ void NEG::improve() {
             int b = iter_nodes_to_check.size() - 1;
 
             //*****************  NODE MOVE
+            increaseApplicationCount( NM, "cnt_NM" );
+
             auto [v,to,val] = getBestNodeMoveForRange(iter_nodes_to_check, a,b);
 
             if(debug){
@@ -193,6 +219,10 @@ void NEG::improve() {
                     use_edge_swaps &&
                      ((iter % EDGE_SWAPS_FREQUENCY) == EDGE_SWAPS_FREQUENCY-1);
             if(use_edges_swaps_in_iteration){
+
+                increaseApplicationCount( EM, "cnt_EM" );
+
+
                 auto [e,to,val] = getBestEdgeMoveForRange(iter_nodes_to_check, a,b);
 
                 if( val < 0 ){
@@ -215,9 +245,13 @@ void NEG::improve() {
 
             //*****************  TRIANGLE MOVE
             bool use_triangle_swaps_in_iteration =
-                    (use_triangle_swaps > 0) &&
+                    use_triangle_swaps &&
                      ((iter % TRIANGLE_SWAPS_FREQUENCY) == TRIANGLE_SWAPS_FREQUENCY-1);
+
+//            use_triangle_swaps_in_iteration = true; // #TEST #CAUTION
             if(use_triangle_swaps_in_iteration){
+                increaseApplicationCount( TM, "cnt_TM" );
+
                 auto best = getBestTriangleDiffClToMove(iter_nodes_to_check, a,b);
                 if( best.swpVal() < 0 ){
                     improved = true;
@@ -225,7 +259,7 @@ void NEG::improve() {
                 if( best.swpVal() <= perturb_swp_thr ){
                     current_result += best.swpVal();
                     VI nodes_before_swap = best.nodes;
-                    for( auto [v,c] : best.getNodesToSwap() ) moveNodeTo(v,c);
+                    for( auto &[v,c] : best.getNodesToSwap() ) moveNodeTo(v,c);
                 }
                 if(best.swpVal() < 0){
                     for( auto c : best.getNodes() ) addClusterNodesToQueue(inCl[c]); // #TEST - moved from above
@@ -239,6 +273,7 @@ void NEG::improve() {
                         use_node_interchanging &&
                          ((iter % NODE_INTERCHANING_FREQUENCY) == NODE_INTERCHANING_FREQUENCY - 1);
                 if (use_node_interchanging_in_iteration) {
+                    increaseApplicationCount( NS, "cnt_NS" );
 
                     auto best = getBestInterchangeNodePairForInterval(iter_nodes_to_check, a, b);
                     val = best.swpVal();
@@ -274,6 +309,8 @@ void NEG::improve() {
                     use_node_interchanging &&
                      ((iter % NODE_INTERCHANING_FREQUENCY) == NODE_INTERCHANING_FREQUENCY-1);
             if(use_node_interchanging_in_iteration){
+                increaseApplicationCount( NS, "cnt_NS" );
+
                 createClusterNodes();
                 for( int i=0; i<N; i++ ) createEdgesToCluster(i);
 
@@ -305,6 +342,8 @@ void NEG::improve() {
                 use_chain2_swaps &&
                     (iter % CHAIN2_FREQUENCY) == CHAIN2_FREQUENCY-1;
         if( use_chain2_swaps_in_iteration ){
+            increaseApplicationCount( DM, "cnt_DM" );
+
             int prev_current = current_result;
             makeChain2Swaps();
             int diff = current_result - prev_current;
@@ -317,6 +356,8 @@ void NEG::improve() {
                 use_join_clusters &&
                 (iter % JOIN_CLUSTERS_FREQUENCY) == JOIN_CLUSTERS_FREQUENCY - 1;
         if( use_join_clusters_in_iteration ){
+            increaseApplicationCount( CJ, "cnt_CJ" );
+
             auto to_join = getBestClustersToJoin();
             if( !to_join.empty() ){
                 improved = true;
@@ -339,7 +380,11 @@ void NEG::improve() {
             }
         }
 
-        Global::counters["iter_" + to_string(iter)] = current_result;
+//        clog << "Adding counter to res_after_iteration" << endl;
+        constexpr bool count_res_after_iteration = true;
+        if constexpr (count_res_after_iteration) {
+            (*counters)["iter_" + ((iter < 10) ? string("0") : "")  + to_string(iter)] = current_result;
+        }
 
         if(Global::checkTle()) break;
 //        if(!Global::CONTEST_MODE) assert( compareCurrentResultWithBruteResult() );
@@ -350,6 +395,13 @@ void NEG::improve() {
         perturb_swp_thr = 0;
 
         if( nn_iter > 0 && allow_perturbations ) {
+
+            constexpr bool count_perturbations = true;
+            if constexpr (count_perturbations) {
+                string label = "perturbations_done";
+                if (!counters->contains(label)) (*counters)[label] = 0;
+                (*counters)[label]++;
+            }
 
             perturb(perturb_mode);
 

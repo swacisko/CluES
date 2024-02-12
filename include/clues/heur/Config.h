@@ -193,6 +193,7 @@ public:
     int neg_triangle_swaps_frequency = 50;
     int neg_chain2_swaps_frequency = 29;
     int neg_node_interchanging_frequency = 25;
+    int neg_join_clusters_frequency = 50;
 
     bool use_component_attraction = false;
     bool use_component_repulsion = false;
