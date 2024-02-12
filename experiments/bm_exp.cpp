@@ -85,15 +85,14 @@ auto runCluESForConfiguration(VVI & V, Config cnf){
     return counters;
 }
 
-auto runNegForConfigurations( VVI V, Config cnf ){
+auto runNegForConfigurations( VVI V, Config cnf, bool use_neg_nomap = true ){
     VI init_part(V.size());
     iota(ALL(init_part),0);
 
     ClusterGraph clg(&V,init_part);
     State st(clg, RANDOM_MATCHING);
     NEG* neg;
-    constexpr bool use_neg_nomap = true;
-    if constexpr (use_neg_nomap){
+    if(use_neg_nomap){
         neg = new NodeEdgeGreedyNomap(st);
     }else{
         neg = new NodeEdgeGreedy(st);
@@ -113,9 +112,10 @@ auto runNegForConfigurations( VVI V, Config cnf ){
 }
 
 auto createConfiguration( int rec_depth, int ls_mask, int max_perturbations,
-                          int nonstandard_move_frequencies, int ls_iterations ){
+                          int nonstandard_move_frequencies, int ls_iterations, bool use_neg_nomap ){
 
     Config cnf;
+    cnf.use_neg_map_version = use_neg_nomap;
     cnf.max_recursion_depth = rec_depth;
     cnf.neg_max_perturb = max_perturbations;
     if( max_perturbations == 0 ) cnf.neg_allow_perturbations = false;
@@ -172,36 +172,40 @@ void runOnInstance( benchmark::State & st, const string& cname ){
     int max_perturbations = st.range(3);
     int nonstandard_move_frequencies = st.range(4);
     int ls_iterations = st.range(5);
+    bool use_neg_nomap = st.range(6);
 
     string rep_id = cname + "_" + to_string(psid) + "_" + to_string(ls_mask);
     int rep = rep_cnt[rep_id]++;
 
+    psid *= 5; // #TEST #CAUTION
 
+
+    auto path = BM_CluES_exp::getFilePath(cname, psid, rep);
+    if( !filesystem::exists(path) ) {
+        st.SkipWithMessage( "File " + path + " does not exist, perhaps sizes were out of bounds"  );
+        return;
+    }
+    clog << "Running test for path: " << path << endl;
 
     for( auto _ : st ){
+
         st.PauseTiming();
 
-        auto path = BM_CluES_exp::getFilePath(cname, psid, rep);
-        assert( filesystem::exists(path) );// DEBUG(path);
-        clog << "Running test for path: " << path << endl;
         ifstream str(path);
         auto V = readGraph(str);
         str.close();
 
         Config cnf = createConfiguration( rec_depth, ls_mask, max_perturbations,
-                              nonstandard_move_frequencies, ls_iterations );
+                              nonstandard_move_frequencies, ls_iterations, use_neg_nomap );
         st.ResumeTiming();
-
 
         map<string, int64_t> counters;
         if(rec_depth == 0){
-            counters = runNegForConfigurations(V, cnf);
+            counters = runNegForConfigurations(V, cnf, use_neg_nomap);
         }
         else{
             counters = runCluESForConfiguration( V, cnf );
         }
-
-//        clog << "There are " << counters.size() << " counters created" << endl;
 
         // update counters
         st.PauseTiming();
@@ -238,7 +242,7 @@ int main(int argc, char** argv) {
 
     auto class_names = vector<string>{ {"A", "B", "C", "D"} };
 //    auto params_set_ids = VI{ { 22, 24, 20, 24 } };
-    auto params_set_ids = VI{ { 3,3,3,3 } }; // #TEST - just to create small benchmarks for plotting
+    auto params_set_ids = VI{ { 4,4,4,4 } }; // #TEST - just to create small benchmarks for plotting
     string delim = "__";
 
     constexpr bool register_rec_and_perturb = false;
@@ -265,6 +269,7 @@ int main(int argc, char** argv) {
                         {5,10,20}, // maximum number of perturbations done in NEG
                         {5,10,20}, // nonstandard move frequencies
                         {50, 100, 150}, // lS_iterations,  total number of iterations for local search
+                        {1}// use_neg_nomap - 0 or 1
                     });
             specifyBenchmarkParameters(bm);
         }
@@ -296,6 +301,7 @@ int main(int argc, char** argv) {
                                                                       10), // maximum number of perturbations done in NEG
                                           benchmark::CreateDenseRange(5, 50, 5), // nonstandard move frequencies
                                           {50, 100, 150}, // lS_iterations,  total number of iterations for local search
+                                          {1} // use_neg_nomap - 0 or 1
                                   });
             specifyBenchmarkParameters(bm);
         }
@@ -303,41 +309,50 @@ int main(int argc, char** argv) {
 
 
 
-    constexpr bool register_minimalistic_iteration_tests = true;
+    constexpr bool register_minimalistic_iteration_tests = false;
 
     if constexpr (register_minimalistic_iteration_tests) {
         for (auto [cname, psid]: zip(class_names, params_set_ids)) {
             string name = "iteration_min_ls" + delim + cname;
             auto bm = benchmark::RegisterBenchmark(name, runOnInstance, cname)
-//                    ->ArgsProduct({
-//                              benchmark::CreateDenseRange(1, psid, 1),
-//                              {
-//                                      NM,
-//                                      NM+EM,
-//                                      NM+EM+TM,
-//                                      NM+DM+CJ+NS,
-//                                      NM+EM+TM+CJ+NS+DM,
-//    //                                                  (1<<8) - 1 // full mask, using all moves
-//                              }, // masks with used ls moves
-//                              {0}, // recursion depth
-//                              {0}, // maximum number of perturbations done in NEG
-//                              benchmark::CreateDenseRange(5,30,5), // nonstandard move frequencies
-//                              {50, 100, 150}, // lS_iterations,  total number of iterations for local search
-//                      });
                     ->ArgsProduct({
                               benchmark::CreateDenseRange(1, psid, 1),
                               {
                                       NM,
                                       NM+EM,
-//                                      NM+EM+CJ+NS+DM,
-//                                      NM+EM+TM,
-//                                      NM+EM+TM+CJ+NS+DM,
+                                      NM+EM+TM,
+                                      NM+EM+CJ+NS+DM,
+                                      NM+EM+TM+CJ+NS+DM,
                                       //                                                  (1<<8) - 1 // full mask, using all moves
                               }, // masks with used ls moves
                               {0}, // recursion depth
                               {0}, // maximum number of perturbations done in NEG
-                              {10}, // nonstandard move frequencies
-                              {100}, // ls_iterations,  total number of iterations for local search
+                              {20}, // nonstandard move frequencies
+                              {150}, // ls_iterations,  total number of iterations for local search
+                              {1} // use_neg_nomap
+                      });
+            specifyBenchmarkParameters(bm);
+        }
+    }
+
+
+    constexpr bool register_perturbation_tests = true;
+
+    if constexpr (register_perturbation_tests) {
+        for (auto [cname, psid]: zip(class_names, params_set_ids)) {
+            string name = "perturbation" + delim + cname;
+            auto bm = benchmark::RegisterBenchmark(name, runOnInstance, cname)
+                    ->ArgsProduct({
+                              benchmark::CreateDenseRange(1, psid, 1),
+                              {
+                                      NM,
+                                      NM+EM,
+                              }, // masks with used ls moves
+                              {0}, // recursion depth
+                              {20}, // maximum number of perturbations done in NEG
+                              {20}, // nonstandard move frequencies
+                              {150}, // ls_iterations,  total number of iterations for local search
+                              {0,1}
                       });
             specifyBenchmarkParameters(bm);
         }
@@ -353,7 +368,7 @@ int main(int argc, char** argv) {
 //    benchmark::SetBenchmarkFilter( "B*" );
 //    benchmark::SetBenchmarkFilter( "C*" );
 //    benchmark::SetBenchmarkFilter( "D*" );
-    benchmark::SetBenchmarkFilter( "iteration_min_ls" );
+//    benchmark::SetBenchmarkFilter( "iteration_min_ls" );
 
     benchmark::Initialize(&argc, argv);
     benchmark::RunSpecifiedBenchmarks();

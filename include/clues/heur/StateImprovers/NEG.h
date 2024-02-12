@@ -229,7 +229,7 @@ public:
     virtual SwapCandidateAdapter getBestTriangleAll(int v) = 0;
     VI edges_to_cluster_triangle, weight_ac_triangle;
     int max_best_cl_size_triangle_swaps = 2;
-    bool use_triangle_swaps_to_other_clusters = true;
+    bool use_triangle_swaps_to_other_clusters = false;
 
     /**
      * Checks triangles using [getBestTriangleDiffClToMove(v)] starting from each v from nodes_to_check[a:b]
