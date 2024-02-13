@@ -52,12 +52,14 @@ map<string,int64_t> runCluES( VVI V, Config cnf ){
     neg->prefer_cluster_mode = 1; // prefer moving to smaller clusters
     neg->improve();
 
-    { // CAUTION - setting values to unused solver
-        solver.best_result = neg->best_result;
-        solver.best_partition = neg->best_partition;
-    }
+//    { // CAUTION - setting values to unused solver
+//        solver.best_result = neg->best_result;
+//        solver.best_partition = neg->best_partition;
+//    }
 
     delete neg;
+//    solver.run_recursive();
+    solver.run_fast();
 
     if( solver.best_result < best_result ){
         best_result = solver.best_result;
@@ -69,7 +71,7 @@ map<string,int64_t> runCluES( VVI V, Config cnf ){
         for( auto & [s,p] : solver.local_search_creator_calls ){
             clog << s << " --> " << p << endl;
         }
-        clog << endl << endl << endl << endl << "********************* NEXT MAIN ITERATION, current best: "
+        clog << endl << endl << endl << endl << "********************* best result found: "
                                        << best_result << endl << endl;
     }
 

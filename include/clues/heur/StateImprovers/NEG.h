@@ -140,6 +140,7 @@ public:
      * If false, then instead of doing perturbations we will terminate
      */
     bool allow_perturbations = true;
+//    int perturbations_frequency = 1e9;
     int perturb_mode = 0; // only splitting   0 - splitting, 1 - joining
 
     /**

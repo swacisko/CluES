@@ -394,13 +394,13 @@ void NEG::improve() {
 
         perturb_swp_thr = 0;
 
-        if( nn_iter > 0 && allow_perturbations ) {
+        if( nn_iter > 3 && allow_perturbations ) {
 
             constexpr bool count_perturbations = true;
             if constexpr (count_perturbations) {
-                string label = "perturbations_done";
-                if (!counters->contains(label)) (*counters)[label] = 0;
-                (*counters)[label]++;
+                string label = "perturbation_#" + to_string(perturbations_done+1);
+//                if (!counters->contains(label)) (*counters)[label] = 0;
+                (*counters)[label] = iter;
             }
 
             perturb(perturb_mode);
@@ -823,6 +823,7 @@ void NEG::joinClustersInPairs() {
 //}
 
 void NEG::setConfigurations(Config &cnf) {
+//    perturbations_frequency = cnf.perturbations_frequency;
     allow_perturbations = cnf.neg_allow_perturbations; // original version
     max_iterations_to_do = cnf.neg_max_iterations_to_do;
 

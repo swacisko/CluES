@@ -200,6 +200,8 @@ public:
 
     bool neg_allow_perturbations = true;
 
+//    int perturbations_frequency = 1e9;
+
     /**
      * If true, then node interchanging between two clusters will be used (swapping nodes)
      */
@@ -227,7 +229,7 @@ public:
 
     //    ******************* NEG
 
-    bool solver_improve_best_known_solution_using_local_search = true;
+    bool solver_improve_best_known_solution_using_local_search = false;
 
     /**
      * Those values will be propagated to swap candidate creators.
