@@ -225,7 +225,7 @@ TEST_F(SolverFixture, testOverall_1){
     Solver solver( V, initial_partition, cnf );
 
 //    clog << "Starting solver.run()" << endl;
-    solver.run();
+    solver.run_fast();
 
     VVI res_cl = {
             {0,1,8,9,10,11,12}, {2,3,4}, {15,16,17}, {5,6,7,18,19,20}
@@ -252,7 +252,7 @@ TEST_F(SolverFixture, testOverall_2) {
     Solver solver(V, initial_partition, cnf);
 
     clog << "Starting solver.run()" << endl;
-    solver.run();
+    solver.run_fast();
 
     VVI best_sol_clusters = StandardUtils::partitionToLayers(solver.best_partition);
     for (VI &v : best_sol_clusters) sort(ALL(v));
@@ -295,7 +295,7 @@ TEST_F(SolverFixture, testOverall_3){
     Solver solver( V, initial_partition, cnf );
 
     clog << "Starting solver.run()" << endl;
-    solver.run();
+    solver.run_fast();
 
     VVI best_sol_clusters = StandardUtils::partitionToLayers(solver.best_partition);
     for( VI & v : best_sol_clusters ) sort(ALL(v));

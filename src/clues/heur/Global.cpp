@@ -14,8 +14,8 @@ namespace Global{
     const bool CONTEST_MODE = false;
 
 //    const bool disable_all_logs = CONTEST_MODE; // by default should be equal to CONTEST_MODE
-//    const bool disable_all_logs = true; // by default should be equal to CONTEST_MODE
-    const bool disable_all_logs = false; // by default should be equal to CONTEST_MODE
+    const bool disable_all_logs = true; // by default should be equal to CONTEST_MODE
+//    const bool disable_all_logs = false; // by default should be equal to CONTEST_MODE
 
     bool checkTle() {
         return secondsFromStart() > max_runtime_in_seconds;

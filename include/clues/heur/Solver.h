@@ -28,7 +28,7 @@ public:
      * Runs [iters] large iterations. After each cnf->granularity_frequency large iterations, current solution is
      * subjected to coarsening using [granulateSolution].
      */
-    void run(int iters = 500);
+//    void run(int iters = 500);
 
     //**************************** RUN2 ********************
     /**
@@ -37,7 +37,7 @@ public:
      * Then it coarsens the graph.
      * Finally, it tries to refine found solution.
      */
-    void run_recursive();
+//    void run_recursive();
 
     /**
      * Runs quickly to get quickly the results.
@@ -59,7 +59,7 @@ public:
      * This function is called to create a set of know solutions.
      *
      */
-    void createKnownSolutions();
+//    void createKnownSolutions();
 
     /**
      * Creates a set of known solutions using run_fast()
@@ -69,7 +69,7 @@ public:
     /**
      * Refines result after coarsening. Uses [partition] to refine.
      */
-    void refineAfterCoarsening();
+//    void refineAfterCoarsening();
 
     //**************************** RUN2 ********************
 
@@ -84,7 +84,9 @@ public:
      * created.
      * @return first element contains partition of [origV], second contains partition of [clg]
      */
-    pair<VI,VI> largeIteration(int iter_cnt = -1);
+//    pair<VI,VI> largeIteration(int iter_cnt = -1);
+
+    map<string,int64_t> *counters;
 
 //private:
 

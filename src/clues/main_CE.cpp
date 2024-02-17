@@ -7,7 +7,7 @@
 #include "clues/main_CE.h"
 
 
-map<string,int64_t> runCluES( VVI V, Config cnf ){
+tuple<map<string,int64_t>, VI> runCluES( VVI V, Config cnf ){
 
     Global::startAlg();
     Global::counters.clear();
@@ -42,6 +42,7 @@ map<string,int64_t> runCluES( VVI V, Config cnf ){
     VPII best_mods; int best_result = 1e9;
 
     Solver solver(V, init_part, cnf);
+    solver.counters = &Global::counters;
 
     ClusterGraph clg(&V,init_part);
     State st(clg, RANDOM_MATCHING);
@@ -90,5 +91,5 @@ map<string,int64_t> runCluES( VVI V, Config cnf ){
         TimeMeasurer::write();
     }
 
-    return Global::counters;
+    return make_tuple(Global::counters, solver.best_partition);
 }

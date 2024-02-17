@@ -19,6 +19,6 @@
 
 #include "Makros.h"
 
-map<string,int64_t>  runCluES(VVI V, Config cnf);
+tuple<map<string,int64_t>, VI>  runCluES(VVI V, Config cnf);
 
 #endif //ALGORITHMSPROJECT_MAIN_CE_H

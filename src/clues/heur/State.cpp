@@ -448,6 +448,7 @@ int State::calculateResultForState() {
 
 void State::applyPartition(VI &part) {
     assert( part.size() == clg->N );
+//    assert( part.size() == clg->partition.size() );
 
     initializeStateData(SINGLE_NODES);
     VVI to_merge = PaceUtils::partitionToClusters(part);
