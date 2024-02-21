@@ -39,6 +39,11 @@ public:
 
     virtual void initializeIndependentData(State & st);
 
+    void useOnlyNodeMoves(){
+        use_triangle_swaps = use_edge_swaps = use_chain2_swaps =
+        use_node_interchanging = use_node_swaps = use_join_clusters = false;
+    }
+
     /**
      * Sets parameters used by this state improved that are specified in [cnf]
      * @param cnf
@@ -51,7 +56,10 @@ public:
      */
     virtual void improve();
 
+    bool count_iterations = false;
+    bool count_perturbations = false;
     map<string,int64_t> *counters = &Global::counters;
+
 
 //private:
 
@@ -335,7 +343,7 @@ public:
      * If true, then not only edges will be checks in edge-swaps, but all pairs of nodes in the same cluster will
      * be checked.
      */
-    bool use_two_node_swaps = true; // #TEST - originally was not admitted
+//    bool use_two_node_swaps = true; // #TEST - originally was not admitted
 
     /**
      * If true, then some functions will return as soon as the first negative swap-valued change is found. This may

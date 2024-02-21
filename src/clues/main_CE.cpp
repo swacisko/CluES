@@ -9,11 +9,12 @@
 
 tuple<map<string,int64_t>, VI> runCluES( VVI V, Config cnf ){
 
+    Global::max_runtime_in_seconds = cnf.max_run_time_millis / 1000;
     Global::startAlg();
     Global::counters.clear();
 
-    Global::max_runtime_in_seconds = 300; // 5 minutes max for single test run
-    clog << "Setting maximal time to " << Global::max_runtime_in_seconds << " seconds" << endl;
+//    Global::max_runtime_in_seconds = 300; // 5 minutes max for single test run
+//    clog << "Setting maximal time to " << Global::max_runtime_in_seconds << " seconds" << endl;
 
     TimeMeasurer::start( "Total time" );
 
@@ -38,30 +39,22 @@ tuple<map<string,int64_t>, VI> runCluES( VVI V, Config cnf ){
     }
 
 
+//    ClusterGraph clg(&V,init_part);
+//    State st(clg, RANDOM_MATCHING);
+//    NEG* neg = new NodeEdgeGreedyW1(st);
+//    neg->setConfigurations(cnf);
+//    neg->perturb_mode = 0; // splitting clusters
+//    neg->prefer_cluster_mode = 1; // prefer moving to smaller clusters
+//    neg->improve();
+//    delete neg;
 
-    VPII best_mods; int best_result = 1e9;
 
     Solver solver(V, init_part, cnf);
     solver.counters = &Global::counters;
-
-    ClusterGraph clg(&V,init_part);
-    State st(clg, RANDOM_MATCHING);
-    NEG* neg = new NodeEdgeGreedyW1(st);
-    neg->setConfigurations(cnf);
-
-    neg->perturb_mode = 0; // splitting clusters
-    neg->prefer_cluster_mode = 1; // prefer moving to smaller clusters
-    neg->improve();
-
-//    { // CAUTION - setting values to unused solver
-//        solver.best_result = neg->best_result;
-//        solver.best_partition = neg->best_partition;
-//    }
-
-    delete neg;
 //    solver.run_recursive();
     solver.run_fast();
 
+    VPII best_mods; int best_result = 1e9;
     if( solver.best_result < best_result ){
         best_result = solver.best_result;
         best_mods = solver.getModifications();

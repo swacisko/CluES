@@ -96,6 +96,7 @@ public:
     void createConfiguration();
 
 //private:
+    int max_run_time_millis = 10*60*1000; // maximum running time in milliseconds, default 10 minutes
 
     /**
      * Swap candidate creators that are to be used. They should be used in the exact order specified by the vector.

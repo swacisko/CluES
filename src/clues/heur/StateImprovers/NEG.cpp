@@ -381,9 +381,9 @@ void NEG::improve() {
         }
 
 //        clog << "Adding counter to res_after_iteration" << endl;
-        constexpr bool count_res_after_iteration = true;
-        if constexpr (count_res_after_iteration) {
-            (*counters)["iter_" + ((iter < 10) ? string("0") : "")  + to_string(iter)] = current_result;
+        if (count_iterations) {
+            (*counters)["iter_res_" + to_string(iter)] = current_result;
+            (*counters)["iter_time_" + to_string(iter)] = Global::secondsFromStart() * 1000;
         }
 
         if(Global::checkTle()) break;
@@ -396,11 +396,15 @@ void NEG::improve() {
 
         if( nn_iter > 3 && allow_perturbations ) {
 
-            constexpr bool count_perturbations = true;
-            if constexpr (count_perturbations) {
-                string label = "perturbation_#" + to_string(perturbations_done+1);
-//                if (!counters->contains(label)) (*counters)[label] = 0;
+            if (count_perturbations) {
+                string label = "pert_iter_#" + to_string(perturbations_done+1);
                 (*counters)[label] = iter;
+
+                label = "pert_res_#" + to_string(perturbations_done+1);
+                (*counters)[label] = current_result;
+
+                label = "pert_time_#" + to_string(perturbations_done+1);
+                (*counters)[label] = Global::secondsFromStart() * 1000;
             }
 
             perturb(perturb_mode);
@@ -415,7 +419,6 @@ void NEG::improve() {
                 prefer_cluster_mode %= 3;
             }
         }
-
     }
 
     if( current_result <= best_result ){
@@ -834,7 +837,7 @@ void NEG::setConfigurations(Config &cnf) {
     use_node_interchanging = cnf.neg_use_node_interchange;
     use_join_clusters = cnf.neg_use_join_clusters;
     use_chain2_swaps = cnf.neg_use_chain2_swaps;
-    use_two_node_swaps = cnf.neg_use_two_node_swaps;
+//    use_two_node_swaps = cnf.neg_use_two_node_swaps;
     perm_fraction = cnf.neg_perm_fraction;
 
     move_frequency = cnf.neg_move_frequency;

@@ -118,9 +118,14 @@ auto runNegForConfigurations( VVI V, Config cnf, bool use_neg_nomap = true ){
     }
     neg->setConfigurations(cnf);
 
+    bool run_until_tle = ( cnf.neg_max_iterations_to_do == 1e9 && cnf.neg_max_perturb == 1e9 );
+    neg->count_iterations = !run_until_tle;
+    neg->count_perturbations = !run_until_tle;
+
     map<string,int64_t> counters;
     neg->perturb_mode = 0; // splitting clusters
 
+    Global::max_runtime_in_seconds = cnf.max_run_time_millis / 1000;
     Global::startAlg();
     neg->counters = &counters;
     neg->improve();
@@ -133,9 +138,12 @@ auto runNegForConfigurations( VVI V, Config cnf, bool use_neg_nomap = true ){
 }
 
 auto createConfiguration( int rec_depth, int ls_mask, int max_perturbations,
-                          int nonstandard_move_frequencies, int ls_iterations, bool use_neg_nomap ){
+                          int nonstandard_move_frequencies, int ls_iterations, bool use_neg_nomap,
+                          int ensemble_granularity, int max_run_time_millis){
 
     Config cnf;
+    cnf.max_run_time_millis = max_run_time_millis;
+    cnf.granularity_frequency = ensemble_granularity;
     cnf.use_neg_map_version = use_neg_nomap;
     cnf.max_recursion_depth = rec_depth;
     cnf.neg_max_perturb = max_perturbations;
@@ -185,8 +193,6 @@ auto createConfiguration( int rec_depth, int ls_mask, int max_perturbations,
 
 void runOnInstance( benchmark::State & st, const string& cname ){
 
-    static map<string,int> rep_cnt;
-
     int psid = st.range(0);
     int ls_mask = st.range(1);
     int rec_depth = st.range(2);
@@ -194,10 +200,14 @@ void runOnInstance( benchmark::State & st, const string& cname ){
     int nonstandard_move_frequencies = st.range(4);
     int ls_iterations = st.range(5);
     bool use_neg_nomap = st.range(6);
+    int ensemble_granularity = st.range(7);
+    int max_run_time_millis = st.range(8) * 1000;
 
     string rep_id = cname + "_" + to_string(psid) + "_" + to_string(ls_mask) + to_string(rec_depth)
             + to_string(max_perturbations) + to_string(nonstandard_move_frequencies) + to_string( ls_iterations )
-            + to_string(use_neg_nomap);
+            + to_string(use_neg_nomap) + to_string(ensemble_granularity);
+
+    static map<string,int> rep_cnt;
     int rep = rep_cnt[rep_id]++;
 
     psid *= PSID_FACTOR; // #TEST #CAUTION
@@ -219,11 +229,15 @@ void runOnInstance( benchmark::State & st, const string& cname ){
         str.close();
 
         Config cnf = createConfiguration( rec_depth, ls_mask, max_perturbations,
-                              nonstandard_move_frequencies, ls_iterations, use_neg_nomap );
+                              nonstandard_move_frequencies, ls_iterations, use_neg_nomap,
+                              ensemble_granularity, max_run_time_millis );
         st.ResumeTiming();
 
         map<string, int64_t> counters;
-        if(rec_depth == 0){
+        const bool use_only_neg = (rec_depth == 0);
+//        const bool use_only_neg = (rec_depth == 0 || (ls_iterations >= (int)1e9 && max_perturbations >= (int)1e9));
+
+        if(use_only_neg){
             counters = runNegForConfigurations(V, cnf, use_neg_nomap);
         }
         else{
@@ -232,6 +246,8 @@ void runOnInstance( benchmark::State & st, const string& cname ){
 
         // update counters
         st.PauseTiming();
+        st.counters["graph_nodes"] = V.size();
+        st.counters["graph_edges"] = GraphUtils::countEdges(V);
         for( auto & [k,v] : counters ) st.counters[k] = v;
         st.ResumeTiming();
 
@@ -264,13 +280,14 @@ int main(int argc, char** argv) {
 
 
     auto class_names = vector<string>{ {"A", "B", "C", "D"} };
-//    auto params_set_ids = VI{ { 22, 24, 20, 24 } }; // full tests - all instances
+//    auto params_set_ids = VI{ { 25, 24, 20, 24 } }; // full tests - all instances
+//    PSID_FACTOR = 1;
 
-//    auto params_set_ids = VI{ { 9,9,9,9 } }; // #TEST - just to create small benchmarks for plotting
+//    auto params_set_ids = VI{ { 9,9,9,9 } }; // #TEST - just to create some fraction of benchmarks for plotting
 //    PSID_FACTOR = 2;
 
-    auto params_set_ids = VI{ { 1,1,1,1 } }; // #TEST - t quickly check if everything works ok
-    PSID_FACTOR = 1;
+    auto params_set_ids = VI{ { 1,1,1,1 } }; // #TEST - single, smallest instances to quickly check if everything is ok
+    PSID_FACTOR = 24;
 
     string delim = "__";
 
@@ -288,16 +305,60 @@ int main(int argc, char** argv) {
                         {
                             NM,
                             NM+EM,
-                            NM+CA+CR,
                             NM+EM+CA+CR,
                         }, // masks with used ls moves
                         benchmark::CreateDenseRange(1,5,1), // recursion depth, if 0 then only NEG will be used
                         {5}, // maximum number of perturbations done in NEG
                         {20}, // nonstandard move frequencies
                         {100}, // lS_iterations,  total number of iterations for local search
-                        {1}// use_neg_nomap - 0 or 1
+                        {1}, // use_neg_nomap - 0 or 1
+                        {5}, // granularity for known solutions in ensemble step
+                        {10 * 60} // maximal time in seconds for the solver
                     });
             specifyBenchmarkParameters(bm);
+        }
+    }
+
+    constexpr bool register_fixed_time_tests = true;
+
+    if constexpr (register_fixed_time_tests) {
+        for (auto [cname, psid]: zip(class_names, params_set_ids)) {
+            string name = "fixed_time" + delim + cname;
+            auto bm = benchmark::RegisterBenchmark(name, runOnInstance, cname)
+                ->ArgsProduct({
+                              benchmark::CreateDenseRange(1, psid, 1),
+                              {
+                                      NM,
+                                      NM+EM,
+                                      NM+EM+CJ+NS+DM,
+                              }, // masks with used ls moves
+                              {0}, // recursion depth, if 0 then only NEG will be used
+                              {(int)1e9}, // no limit for perturbations, running until TLE
+                              {20}, // nonstandard move frequencies
+                              {(int)1e9}, // no limit for iterations
+                              {1}, // use_neg_nomap - 0 or 1
+                              {5}, // granularity for known solutions in ensemble step
+                              {2, 30, 2} // maximal time in seconds for the solver
+                      });
+            specifyBenchmarkParameters(bm);
+
+            auto bm2 = benchmark::RegisterBenchmark(name, runOnInstance, cname)
+                    ->ArgsProduct({
+                              benchmark::CreateDenseRange(1, psid, 1),
+                              {
+                                      NM,
+                                      NM+EM,
+                                      NM+EM+CJ+NS+DM,
+                              }, // masks with used ls moves
+                              {3}, // recursion depth, if 0 then only NEG will be used
+                              {5}, // no limit for perturbations, running until TLE
+                              {20}, // nonstandard move frequencies
+                              {100}, // no limit for iterations
+                              {1}, // use_neg_nomap - 0 or 1
+                              {5}, // granularity for known solutions in ensemble step
+                              {2, 30, 2} // maximal time in seconds for the solver
+                      });
+            specifyBenchmarkParameters(bm2);
         }
     }
 
@@ -326,7 +387,9 @@ int main(int argc, char** argv) {
                               {5}, // maximum number of perturbations done in NEG
                               {20}, // nonstandard move frequencies
                               {100}, // ls_iterations,  total number of iterations for local search
-                              {1}// use_neg_nomap - 0 or 1
+                              {1}, // use_neg_nomap - 0 or 1
+                              {5}, // granularity for known solutions in ensemble step
+                              {10 * 60} // maximal time in seconds for the solver
                       });
             specifyBenchmarkParameters(bm);
         }
@@ -350,7 +413,9 @@ int main(int argc, char** argv) {
                               {0}, // maximum number of perturbations done in NEG
                               {20}, // nonstandard move frequencies
                               {25, 50, 75, 100, 125, 150}, // ls_iterations,  total number of iterations for local search
-                              {1} // use_neg_nomap
+                              {1}, // use_neg_nomap - 0 or 1
+                              {-1}, // granularity for known solutions in ensemble step
+                              {10 * 60} // maximal time in seconds for the solver
                       });
             specifyBenchmarkParameters(bm);
         }
@@ -374,7 +439,9 @@ int main(int argc, char** argv) {
                               benchmark::CreateDenseRange(0,20,2), // maximum number of perturbations done in NEG
                               {20}, // nonstandard move frequencies
                               {(int)1e9}, // no limit for iterations, perturbations are limited
-                              {0}
+                              {1}, // use_neg_nomap - 0 or 1
+                              {-1}, // granularity for known solutions in ensemble step
+                              {10 * 60} // maximal time in seconds for the solver
                       });
             specifyBenchmarkParameters(bm);
         }
@@ -399,7 +466,34 @@ int main(int argc, char** argv) {
                               {5}, // maximum number of perturbations done in NEG
                               {20}, // nonstandard move frequencies
                               {(int)1e9}, // no limit for iterations, perturbations are limited
-                              {0,1}
+                              {0,1}, // use_neg_nomap - 0 or 1
+                              {-1}, // granularity for known solutions in ensemble step
+                              {10 * 60} // maximal time in seconds for the solver
+                      });
+            specifyBenchmarkParameters(bm);
+        }
+    }
+
+    constexpr bool register_granularity_tests = true;
+
+    if constexpr (register_granularity_tests) {
+        for (auto [cname, psid]: zip(class_names, params_set_ids)) {
+            string name = "granularity" + delim + cname;
+            auto bm = benchmark::RegisterBenchmark(name, runOnInstance, cname)
+                    ->ArgsProduct({
+                              benchmark::CreateDenseRange(1, psid, 1),
+                              {
+                                      NM,
+                                      NM+EM,
+                                      NM+EM+CJ+NS+DM,
+                              }, // masks with used ls moves
+                              {3}, // recursion depth, if 0 then only NEG will be used
+                              {5}, // maximum number of perturbations done in NEG
+                              {20}, // nonstandard move frequencies
+                              {(int)1e9}, // no limit for iterations, perturbations are limited
+                              {1}, // use_neg_nomap - 0 or 1
+                              benchmark::CreateDenseRange(2,8,1), // granularity for known solutions in ensemble step
+                              {10 * 60} // maximal time in seconds for the solver
                       });
             specifyBenchmarkParameters(bm);
         }
@@ -417,6 +511,7 @@ int main(int argc, char** argv) {
 //    benchmark::SetBenchmarkFilter( "D*" );
 //    benchmark::SetBenchmarkFilter( "ls_iteartions" );
 //    benchmark::SetBenchmarkFilter( "recursion" );
+    benchmark::SetBenchmarkFilter( "fixed_time" );
 
     benchmark::Initialize(&argc, argv);
     benchmark::RunSpecifiedBenchmarks();
