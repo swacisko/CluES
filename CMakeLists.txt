@@ -4,19 +4,19 @@ project(CluES_exp)
 set(CMAKE_CXX_STANDARD 20)
 
 #******************************************************************************************  Google-tests
-#configure_file(CMakeLists.txt.gtest googletest-download/CMakeLists.txt)
-#execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-#        RESULT_VARIABLE result
-#        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
-#if(result)
-#    message(FATAL_ERROR "CMake step for googletest failed: ${result}")
-#endif()
-#execute_process(COMMAND ${CMAKE_COMMAND} --build .
-#        RESULT_VARIABLE result
-#        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
-#if(result)
-#    message(FATAL_ERROR "Build step for googletest failed: ${result}")
-#endif()
+configure_file(CMakeLists.txt.gtest googletest-download/CMakeLists.txt)
+execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
+if(result)
+    message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+endif()
+execute_process(COMMAND ${CMAKE_COMMAND} --build .
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
+if(result)
+    message(FATAL_ERROR "Build step for googletest failed: ${result}")
+endif()
 
 # Add googletest directly to our build. This defines
 # the gtest and gtest_main targets.
@@ -29,20 +29,20 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
 ##********************************************************************* google-benchmark
 #set(CMAKE_BUILD_TYPE Release) # this enables building googlebenchmark in release mode
 
-#configure_file(CMakeLists.txt.gbench googlebenchmark-download/CMakeLists.txt)
-#execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" . # build in debug mode
-##execute_process(COMMAND ${CMAKE_COMMAND} "${CMAKE_GENERATOR}" . # build in release mode
-#        RESULT_VARIABLE result
-#        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-download )
-#if(result)
-#    message(FATAL_ERROR "CMake step for googlebenchmark failed: ${result}")
-#endif()
-#execute_process(COMMAND ${CMAKE_COMMAND} --build .
-#        RESULT_VARIABLE result
-#        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-download )
-#if(result)
-#    message(FATAL_ERROR "Build step for googlebenchmark failed: ${result}")
-#endif()
+configure_file(CMakeLists.txt.gbench googlebenchmark-download/CMakeLists.txt)
+execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" . # build in debug mode
+#execute_process(COMMAND ${CMAKE_COMMAND} "${CMAKE_GENERATOR}" . # build in release mode
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-download )
+if(result)
+    message(FATAL_ERROR "CMake step for googlebenchmark failed: ${result}")
+endif()
+execute_process(COMMAND ${CMAKE_COMMAND} --build .
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-download )
+if(result)
+    message(FATAL_ERROR "Build step for googlebenchmark failed: ${result}")
+endif()
 #
 add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-src
         ${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-build
