@@ -129,7 +129,7 @@ auto runNegForConfigurations( VVI V, Config cnf, bool use_neg_nomap = true ){
     Global::startAlg();
     neg->counters = &counters;
     neg->improve();
-    clog << "Best result found by neg: " << neg->best_result << endl;
+//    clog << "Best result found by neg: " << neg->best_result << endl;
 
     auto stats = PaceUtils::getEdgeModificationStatistics( V, neg->best_partition );
     addStatsForCounters(stats, counters, neg->best_partition);
@@ -261,7 +261,7 @@ void specifyBenchmarkParameters(auto * bm){
     bm->Unit(unit)
             ->Iterations(ITERATIONS)
             ->Repetitions(REPETITIONS)
-            ->DisplayAggregatesOnly(true)
+            ->DisplayAggregatesOnly(false) // #TEST
             ->UseRealTime()
             ->ComputeStatistics("max", [](const std::vector<double> &v) -> double {
                 return *(std::max_element(std::begin(v), std::end(v)));
@@ -287,7 +287,13 @@ int main(int argc, char** argv) {
 //    PSID_FACTOR = 2;
 
     auto params_set_ids = VI{ { 1,1,1,1 } }; // #TEST - single, smallest instances to quickly check if everything is ok
-    PSID_FACTOR = 24;
+    PSID_FACTOR = 1;
+
+    if( argc > 2 ){
+        auto psid = stoi( string(argv[2]) );
+//        fill(ALL(params_set_ids), psid); // old
+        PSID_FACTOR = psid; // new, probably correct...
+    }
 
     string delim = "__";
 
@@ -436,7 +442,7 @@ int main(int argc, char** argv) {
                                   NM+EM+CJ+NS+DM,
                               }, // masks with used ls moves
                               {0}, // recursion depth, if 0 then only NEG will be used
-                              benchmark::CreateDenseRange(0,20,2), // maximum number of perturbations done in NEG
+                              benchmark::CreateDenseRange(2,20,2), // maximum number of perturbations done in NEG
                               {20}, // nonstandard move frequencies
                               {(int)1e9}, // no limit for iterations, perturbations are limited
                               {1}, // use_neg_nomap - 0 or 1
@@ -490,9 +496,10 @@ int main(int argc, char** argv) {
                               {3}, // recursion depth, if 0 then only NEG will be used
                               {5}, // maximum number of perturbations done in NEG
                               {20}, // nonstandard move frequencies
-                              {(int)1e9}, // no limit for iterations, perturbations are limited
+//                              {(int)1e9}, // no limit for iterations, perturbations are limited
+                              {100},
                               {1}, // use_neg_nomap - 0 or 1
-                              benchmark::CreateDenseRange(2,8,1), // granularity for known solutions in ensemble step
+                              benchmark::CreateDenseRange(2,7,1), // granularity for known solutions in ensemble step
                               {10 * 60} // maximal time in seconds for the solver
                       });
             specifyBenchmarkParameters(bm);
@@ -509,9 +516,16 @@ int main(int argc, char** argv) {
 //    benchmark::SetBenchmarkFilter( "B*" );
 //    benchmark::SetBenchmarkFilter( "C*" );
 //    benchmark::SetBenchmarkFilter( "D*" );
-//    benchmark::SetBenchmarkFilter( "ls_iteartions" );
-//    benchmark::SetBenchmarkFilter( "recursion" );
-    benchmark::SetBenchmarkFilter( "fixed_time" );
+//    benchmark::SetBenchmarkFilter( "ls_iterations" );
+//    benchmark::SetBenchmarkFilter( "perturbation" );
+//    benchmark::SetBenchmarkFilter( "fixed_time__C" );
+
+    if( argc > 1 ){
+        string filter = string(argv[1]);
+        clog << "Applying filter: " << filter << endl;
+        benchmark::SetBenchmarkFilter( filter );
+    }
+
 
     benchmark::Initialize(&argc, argv);
     benchmark::RunSpecifiedBenchmarks();

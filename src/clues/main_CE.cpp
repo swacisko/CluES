@@ -67,6 +67,8 @@ tuple<map<string,int64_t>, VI> runCluES( VVI V, Config cnf ){
         }
         clog << endl << endl << endl << endl << "********************* best result found: "
                                        << best_result << endl << endl;
+        cerr << "Final result: " << best_result << endl;
+        cerr << "Total real time: " << Global::secondsFromStart() << endl;
     }
 
     bool write_mods = false;
@@ -75,8 +77,6 @@ tuple<map<string,int64_t>, VI> runCluES( VVI V, Config cnf ){
         for (auto e : mods) cout << e.first+1 << " " << e.second+1 << endl;
     }
 
-    cerr << "Final result: " << best_result << endl;
-    cerr << "Total real time: " << Global::secondsFromStart() << endl;
 
 
     if(!Global::disable_all_logs) {

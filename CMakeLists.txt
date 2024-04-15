@@ -27,11 +27,11 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
 
 
 ##********************************************************************* google-benchmark
-#set(CMAKE_BUILD_TYPE Release) # this enables building googlebenchmark in release mode
+set(CMAKE_BUILD_TYPE Release) # this enables building googlebenchmark in release mode
 
 configure_file(CMakeLists.txt.gbench googlebenchmark-download/CMakeLists.txt)
-execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" . # build in debug mode
-#execute_process(COMMAND ${CMAKE_COMMAND} "${CMAKE_GENERATOR}" . # build in release mode
+#execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" . # build in debug mode
+execute_process(COMMAND ${CMAKE_COMMAND} "${CMAKE_GENERATOR}" . # build in release mode
         RESULT_VARIABLE result
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-download )
 if(result)
